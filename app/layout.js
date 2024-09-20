@@ -20,9 +20,8 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black`} >
+
         <div className="flex p-4 items-center text-sm">
           <div className="grow">LOGO</div>
           <div className="grow-0 basis-[400px]">
@@ -40,10 +39,13 @@ export default function RootLayout({ children }) {
             </nav>
           </div>
         </div>
+
         {children}
+
         <footer className="p-4 bg-neutral-900">
           <p>Project by Patrick Valera 2024</p>
         </footer>
+
       </body>
     </html>
   );

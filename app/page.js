@@ -1,16 +1,18 @@
+"use client"
 import Image from "next/image";
-
+import GraphWindow from './components/graphWindow'
+import MiniGraph from "./components/miniGraph";
 export default function Home() {
   return (
-    <div className="">
-      <main className="flex max-w-[1400px] mx-auto gap-2 w-full">
+    <div className="mt-6">
+      <main className="flex max-w-[1400px] mx-auto gap-10 w-full">
         <div className="w-3/4">
           <GraphWindow />
         </div>
-        <div className="w-1/4 border-2 border-neutral-700 ">
-          <h2 className="p-4 border-b-2 border-neutral-800 font-bold">Postions</h2>
+        <div className="w-1/4 border-[1px] border-neutral-700 rounded-md">
+          <h2 className="p-4 border-b-[1px] border-neutral-800 font-bold">Postions</h2>
           <PositionsWindow />
-          <h2 className="p-4 border-y-2 border-neutral-800 font-bold">Watch List</h2>
+          <h2 className="p-4 border-y-[1px] border-neutral-800 font-bold">Watch List</h2>
           <WatchListWindow />
         </div>
       </main>
@@ -18,13 +20,7 @@ export default function Home() {
   );
 }
 
-const GraphWindow = () => {
-  return (
-    <div >
-      Investing 123
-    </div>
-  )
-}
+
 const WatchListWindow = () => {
   return (
     <div className="p-4 flex flex-col gap-4 text-sm">
@@ -100,8 +96,8 @@ const ItemWatchList = ({watching}) => {
   return (
     <div className="flex items-center gap-2">
       <span className="font-bold grow">{watching.ticker}</span>
-      {watching.changePer>0?  <div className="basis-28 bg-green-400 h-[2px]"></div>:  <div className="basis-28 bg-red-400 h-[2px]"></div>}
-    
+      {/* {watching.changePer>0?  <div className="basis-28 bg-green-400 h-[2px]"></div>:  <div className="basis-28 bg-red-400 h-[2px]"></div>} */}
+      <MiniGraph/>
       <div className="grow flex items-end flex-col">
         <p className="grow">${watching.value}</p>
         <p className="grow">{watching.changePer}%</p>
