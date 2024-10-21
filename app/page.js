@@ -39,8 +39,6 @@ export default function Home() {
       setStocks((old) => {
         let a = old
         a[stock].price = newPrice
-        console.log(old);
-
         return a
       })
       // Wait Fetch new data
@@ -73,7 +71,7 @@ export default function Home() {
           <h1 className="text-4xl font-bold">Investing</h1>
           <h1 className="text-4xl font-bold">${userBal.toFixed(2)}</h1>
           <p className="text-xs mt-1">$330(31.91%)<span>Today</span></p>
-          <GraphWindow />
+          <GraphWindow value={userBal}/>
         </div>
         <div className="w-1/4 border-[1px] border-neutral-700 rounded-md">
           <h2 className="p-4 border-b-[1px] border-neutral-800 font-bold">Postions</h2>

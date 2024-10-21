@@ -102,7 +102,7 @@ function getTimeSince() {
 
     return differenceInSeconds;
 }
-const GraphWindow = () => {
+const GraphWindow = ({value}) => {
     const now = Date.now()
     const [priceData, setPriceData] = useState(Array.from({ length: 78 }, (_, index) => ({ value: null, x: index })))
     const [timeIdx, setCurr] = useState(-1)
@@ -138,14 +138,14 @@ const GraphWindow = () => {
                 return newPrice
             })
             setCurr(x=>x+1)
-        },1000)
+        },3000)
         return ()=>clearInterval(interval)
     },[setCurrPrice])
 
     // UPDATE GRAPH WHEN CURR PRICE CHANGES
     useEffect(() => {
-        UpdateGraph(currPrice)
-    }, [currPrice])
+        UpdateGraph(value)
+    }, [value])
 
     return (
         <div>
@@ -164,7 +164,7 @@ const GraphWindow = () => {
                         }}
                     >
                         <Tooltip isAnimationActive={false} />
-                        <YAxis dataKey={'value'} hide={true} domain={[20, 80]} />
+                        <YAxis dataKey={'value'} hide={true} domain={[20, 250]} />
                         <ReferenceLine ifOverflow="extendDomain" y={50} stroke="#ddd" strokeDasharray="1 5" />
                         <Line isAnimationActive={false} type="linear" strokeWidth={1.5} dot={false} dataKey="value" stroke="#07CA0C" />
                     </LineChart>
