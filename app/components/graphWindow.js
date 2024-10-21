@@ -115,7 +115,7 @@ const GraphWindow = () => {
                 return (i == timeIdx ? { ...item, value: newPrice } : item)
             })
         })
-        console.log(newPrice)
+        // console.log(newPrice)
     }, [timeIdx])
 
     // useEffect(() => {
