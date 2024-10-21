@@ -14,52 +14,65 @@ export default function Home() {
   const [userBal, setUserBal] = useState(0)
   const [ownedStocks, setOwnedStocks] = useState({
     'spy': {
-      shareCt: 20
+      shareCt: 1
+    },
+    'amd': {
+      shareCt: 1
     }
   })
   const [stocks, setStocks] = useState({
     'spy': {
-      price: 300
+      price: 100
+    },
+    'amd': {
+      price: 100
     }
   })
 
   const updateStock = () => {
     Object.keys(stocks).map((stock) => {
-      let newPrice = stocks[stock].price * ((Math.random() * .05) +1 - .025)
+      // Generate number between -1.01 and 1.01
+      let percChange = (1+Math.random() * 0.02 - 0.01)
+      let newPrice = stocks[stock].price * percChange
       // console.log(newPrice);
-      
+
       setStocks((old) => {
         let a = old
         a[stock].price = newPrice
         console.log(old);
-        
+
         return a
       })
       // Wait Fetch new data
       // wait for updated UI then move on to next
     })
   }
-  useEffect(()=>{
+  useEffect(() => {
     console.log("HJFOIEFJ")
-  },[stocks])
+  }, [stocks])
+
   const updateUserBal = () => {
+    let newUserBal = 0
     Object.keys(ownedStocks).map((stock) => {
-      let newUserBal = 0
-      newUserBal += stock.shareCt * stocks[stock].price
-      setUserBal(newUserBal)
+      newUserBal += ownedStocks[stock].shareCt * stocks[stock].price
     })
+    setUserBal(newUserBal)
   }
 
   useEffect(() => {
     const interval = setInterval(() => {
       updateStock()
       updateUserBal()
-    }, 1000);
+    }, 3000);
   }, [])
+
   return (
     <div className="mt-6">
       <main className="flex max-w-[1400px] mx-auto gap-10 w-full">
         <div className="w-3/4">
+          <h1 className="text-4xl font-bold">Investing</h1>
+          <h1 className="text-4xl font-bold">${userBal.toFixed(2)}</h1>
+          <p className="text-xs mt-1">$330(31.91%)<span>Today</span></p>
           <GraphWindow />
         </div>
         <div className="w-1/4 border-[1px] border-neutral-700 rounded-md">

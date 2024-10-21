@@ -149,9 +149,7 @@ const GraphWindow = () => {
 
     return (
         <div>
-            <h1 className="text-4xl font-bold">Investing</h1>
-            <h1 className="text-4xl font-bold">${currPrice.toFixed(2)}</h1>
-            <p className="text-xs mt-1">$330(31.91%)<span>Today</span></p>
+    
             <div className=' w-full '>
                 <ResponsiveContainer width="100%" aspect={2} >
                     <LineChart
