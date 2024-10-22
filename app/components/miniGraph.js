@@ -28,7 +28,7 @@ const MiniGraph = () => {
                 return newPrice
             })
             setCurr(x => x + 1)
-        }, 1000)
+        }, 200)
         return () => clearInterval(interval)
     }, [setCurrPrice])
 

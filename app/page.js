@@ -45,9 +45,6 @@ export default function Home() {
       // wait for updated UI then move on to next
     })
   }
-  useEffect(() => {
-    console.log("HJFOIEFJ")
-  }, [stocks])
 
   const updateUserBal = () => {
     let newUserBal = 0
@@ -58,10 +55,14 @@ export default function Home() {
   }
 
   useEffect(() => {
+    console.log("Stock List updated")
+  }, [stocks])
+
+  useEffect(() => {
     const interval = setInterval(() => {
       updateStock()
       updateUserBal()
-    }, 3000);
+    }, 200);
   }, [])
 
   return (
@@ -75,28 +76,30 @@ export default function Home() {
         </div>
         <div className="w-1/4 border-[1px] border-neutral-700 rounded-md">
           <h2 className="p-4 border-b-[1px] border-neutral-800 font-bold">Postions</h2>
-          {Object.keys(stocks).map((stock) => <div key={stock}>{stock} --- {stocks[stock].price}</div>)}
-          <PositionsWindow />
+          <PositionsWindow ownedStocks={ownedStocks} stocks={stocks}/>
           <h2 className="p-4 border-y-[1px] border-neutral-800 font-bold">Watch List</h2>
-          <WatchListWindow />
+          <WatchListWindow stocks={stocks}/>
         </div>
       </main>
     </div>
   );
 }
 
-
-const WatchListWindow = () => {
+const PositionsWindow = ({ownedStocks,stocks}) => {
   return (
     <div className="p-4 flex flex-col gap-4 text-sm">
-      {mockWatchList.map((item, idx) => (<ItemWatchList watching={item} key={idx} />))}
+      {Object.keys(ownedStocks).map((stock) =>  (<ItemPosition stock={{...ownedStocks[stock],ticker:stock,price:stocks[stock].price}} key={stock} />)
+      )}
+
+      {/* {mockPostions.map((item, idx) => (<ItemPosition position={item} key={idx} />))} */}
     </div>
   )
 }
-const PositionsWindow = () => {
+
+const WatchListWindow = ({stocks}) => {
   return (
     <div className="p-4 flex flex-col gap-4 text-sm">
-      {mockPostions.map((item, idx) => (<ItemPosition position={item} key={idx} />))}
+      {mockWatchList.map((item, idx) => (<ItemWatchList watching={item} key={idx} />))}
     </div>
   )
 }
@@ -145,14 +148,15 @@ const mockWatchList = [{
   changePer: .08
 },]
 
-const ItemPosition = ({ position }) => {
+const ItemPosition = ({ stock }) => {
+  console.log(stock)
   return (
     <div className="flex">
       <div className="grow">
-        <p className="font-bold">{position.ticker}</p>
-        <p className="text-xs">{position.count} Shares</p>
+        <p className="font-bold">{stock.ticker}</p>
+        <p className="text-xs">{stock.shareCt} Shares</p>
       </div>
-      <span className="font-bold">${position.value}</span>
+      <span className="font-bold">${(stock.price*stock.shareCt).toFixed(2)}</span>
     </div>
   )
 }
