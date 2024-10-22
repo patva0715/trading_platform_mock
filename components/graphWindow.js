@@ -151,7 +151,7 @@ const GraphWindow = ({ value }) => {
         <div>
 
             <div className=' w-full '>
-                <ResponsiveContainer width="100%" aspect={2} >
+                <ResponsiveContainer width={'100%'} height={'100%'} aspect={2} >
                     <LineChart
                         width={200}
                         height={300}
@@ -172,7 +172,7 @@ const GraphWindow = ({ value }) => {
             </div>
             <div className='py-4 px-1 flex gap-2 flex-col border-y-[1px] border-neutral-800'>
                 <div className='flex basis-full gap-2'>
-                    {["1D", "1W", "1M", "YTD", "1Y"].map((range) => (<button className='bg-neutral-700 text-white p-1 hover:bg-green-500 aspect-[3] basis-10 w-auto'>{range}</button>))}
+                    {["1D", "1W", "1M", "YTD", "1Y"].map((range) => (<button key={range} className='bg-neutral-700 text-white p-1 hover:bg-green-500 aspect-[3] basis-10 w-auto'>{range}</button>))}
                 </div>
                 <div className='flex '>
                     <span className='text-base font-bold grow'>Buying power</span>
@@ -182,7 +182,7 @@ const GraphWindow = ({ value }) => {
                 <h2 className="text-2xl font-semibold py-4">Biggest Movers</h2>
 
                 <div className='flex gap-2'>
-                    {['SPY','AMD','NVDA','COIN'].map((stock)=><div className='basis-[120px] aspect-square flex items-center justify-center font-semibold text-green-500 flex-col border-[1px] border-green-500'><p>{stock}</p><span className='text-xl font-bold'>10.54%</span></div>)}
+                    {['SPY','AMD','NVDA','COIN'].map((stock)=><div key={stock} className='basis-[120px] aspect-square flex items-center justify-center font-semibold text-green-500 flex-col border-[1px] border-green-500'><p>{stock}</p><span className='text-xl font-bold'>10.54%</span></div>)}
                 </div>
 
             </div>

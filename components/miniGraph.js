@@ -40,7 +40,7 @@ const MiniGraph = () => {
     return (
         <div className='w-[120px]'>
 
-            <ResponsiveContainer width="100%" aspect={3} >
+            <ResponsiveContainer width="100%" height="100%" minWidth={50} aspect={3} >
                 <LineChart
                     width={100}
                     height={170}
