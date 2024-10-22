@@ -65,6 +65,35 @@ export default function Home() {
       updateUserBal()
     }, 200);
   }, [])
+  // DIVIDER
+
+  const [stockPrices, setStockPrices] = useState({ 'spy': 0, 'amd': 0 });
+
+  useEffect(() => {
+    // Establish a WebSocket connection to the server
+    const ws = new WebSocket('ws://localhost:5000');
+
+    // Function to request stock prices every second
+    const requestStockPrices = () => {
+      ws.send(String('getStockPrices'));
+    };
+
+    // When new data is received from the server, update the stock prices
+    ws.onmessage = (event) => {
+      console.log(event.data)
+      const data = JSON.parse(event.data);
+      setStockPrices(data);
+    };
+
+    // Set an interval to request stock prices every second
+    const interval = setInterval(requestStockPrices, 1000);
+
+    // Clean up WebSocket connection and interval on component unmount
+    return () => {
+      clearInterval(interval);
+      ws.close();
+    };
+  }, []);
 
   return (
     <>
@@ -80,6 +109,7 @@ export default function Home() {
           </div>
           <div className="w-1/4 border-[1px] border-neutral-700 rounded-md">
             <h2 className="p-4 border-b-[1px] border-neutral-800 font-bold">Postions</h2>
+            {Object.keys(stockPrices).map(stock=><div key={stock}>{stockPrices[stock]}</div>)}
             <PositionsWindow ownedStocks={ownedStocks} stocks={stocks} />
             <h2 className="p-4 border-y-[1px] border-neutral-800 font-bold">Watch List</h2>
             <WatchListWindow stocks={stocks} />
@@ -90,7 +120,7 @@ export default function Home() {
 
   );
 }
-
+// DIVIDER
 const PositionsWindow = ({ ownedStocks, stocks }) => {
   return (
     <div className="p-4 flex flex-col gap-4 text-sm">
@@ -155,7 +185,7 @@ const mockWatchList = [{
 },]
 
 const ItemPosition = ({ stock }) => {
-  console.log(stock)
+  // console.log(stock)
   return (
     <div className="flex">
       <div className="grow">
