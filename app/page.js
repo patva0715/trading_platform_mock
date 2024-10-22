@@ -1,9 +1,10 @@
 "use client"
 import Image from "next/image";
-import GraphWindow from './components/graphWindow'
-import MiniGraph from "./components/miniGraph";
+import GraphWindow from '../components/graphWindow'
+import MiniGraph from "../components/miniGraph";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import NavBar from "@/components/navbar";
 // DIVIDER
 // On load connect to backend server. Instantiate a socket for each stock in the watchlist
 // Loop through each stock owned and fetch new data for each. .1s gap between each fetch
@@ -32,7 +33,7 @@ export default function Home() {
   const updateStock = () => {
     Object.keys(stocks).map((stock) => {
       // Generate number between -1.01 and 1.01
-      let percChange = (1+Math.random() * 0.02 - 0.01)
+      let percChange = (1 + Math.random() * 0.02 - 0.01)
       let newPrice = stocks[stock].price * percChange
       // console.log(newPrice);
 
@@ -66,29 +67,34 @@ export default function Home() {
   }, [])
 
   return (
-    <div className="mt-6">
-      <main className="flex max-w-[1400px] mx-auto gap-10 w-full">
-        <div className="w-3/4">
-          <h1 className="text-4xl font-bold">Investing</h1>
-          <h1 className="text-4xl font-bold">${userBal.toFixed(2)}</h1>
-          <p className="text-xs mt-1">$330(31.91%)<span>Today</span></p>
-          <GraphWindow value={userBal}/>
-        </div>
-        <div className="w-1/4 border-[1px] border-neutral-700 rounded-md">
-          <h2 className="p-4 border-b-[1px] border-neutral-800 font-bold">Postions</h2>
-          <PositionsWindow ownedStocks={ownedStocks} stocks={stocks}/>
-          <h2 className="p-4 border-y-[1px] border-neutral-800 font-bold">Watch List</h2>
-          <WatchListWindow stocks={stocks}/>
-        </div>
-      </main>
-    </div>
+    <>
+      <NavBar />
+      <div className="mt-6">
+
+        <main className="flex max-w-[1400px] mx-auto gap-10 w-full">
+          <div className="w-3/4">
+            <h1 className="text-4xl font-bold">Investing</h1>
+            <h1 className="text-4xl font-bold">${userBal.toFixed(2)}</h1>
+            <p className="text-xs mt-1">$330(31.91%)<span>Today</span></p>
+            <GraphWindow value={userBal} />
+          </div>
+          <div className="w-1/4 border-[1px] border-neutral-700 rounded-md">
+            <h2 className="p-4 border-b-[1px] border-neutral-800 font-bold">Postions</h2>
+            <PositionsWindow ownedStocks={ownedStocks} stocks={stocks} />
+            <h2 className="p-4 border-y-[1px] border-neutral-800 font-bold">Watch List</h2>
+            <WatchListWindow stocks={stocks} />
+          </div>
+        </main>
+      </div>
+    </>
+
   );
 }
 
-const PositionsWindow = ({ownedStocks,stocks}) => {
+const PositionsWindow = ({ ownedStocks, stocks }) => {
   return (
     <div className="p-4 flex flex-col gap-4 text-sm">
-      {Object.keys(ownedStocks).map((stock) =>  (<ItemPosition stock={{...ownedStocks[stock],ticker:stock,price:stocks[stock].price}} key={stock} />)
+      {Object.keys(ownedStocks).map((stock) => (<ItemPosition stock={{ ...ownedStocks[stock], ticker: stock, price: stocks[stock].price }} key={stock} />)
       )}
 
       {/* {mockPostions.map((item, idx) => (<ItemPosition position={item} key={idx} />))} */}
@@ -96,7 +102,7 @@ const PositionsWindow = ({ownedStocks,stocks}) => {
   )
 }
 
-const WatchListWindow = ({stocks}) => {
+const WatchListWindow = ({ stocks }) => {
   return (
     <div className="p-4 flex flex-col gap-4 text-sm">
       {mockWatchList.map((item, idx) => (<ItemWatchList watching={item} key={idx} />))}
@@ -156,7 +162,7 @@ const ItemPosition = ({ stock }) => {
         <p className="font-bold">{stock.ticker}</p>
         <p className="text-xs">{stock.shareCt} Shares</p>
       </div>
-      <span className="font-bold">${(stock.price*stock.shareCt).toFixed(2)}</span>
+      <span className="font-bold">${(stock.price * stock.shareCt).toFixed(2)}</span>
     </div>
   )
 }
