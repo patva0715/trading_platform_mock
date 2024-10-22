@@ -1,0 +1,31 @@
+/* Container for the circle */
+.circle-container {
+    position: relative;
+    width: 420px;
+    height: 420px;
+    margin: 50px auto;
+    border-radius: 50%;
+    animation: rotate-circle 10s linear infinite;
+  }
+  
+  /* Each square */
+  .square {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    background-color: transparent;
+    border: 1px solid white;
+    top: 50%;
+    left: 50%;
+    transform: rotate(calc(var(--i) * 30deg)) translate(350px) ;
+  }
+  
+  /* Animate the entire container (circle) rotation */
+  @keyframes rotate-circle {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
