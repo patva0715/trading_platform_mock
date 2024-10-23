@@ -141,7 +141,7 @@ const PositionsWindow = ({ ownedStocks, stocks }) => {
 
 const WatchListWindow = ({ stocks, lastPrices}) => {
   return (
-    <div className="p-4 flex flex-col gap-4 text-sm">
+    <div className="flex flex-col text-sm">
       {Object.keys(stocks).map((ticker, idx) => (<ItemWatchList stock={{ price: stocks[ticker], ticker, lastPrice:lastPrices[ticker], change:(stocks[ticker]-lastPrices[ticker])/lastPrices[ticker] }} key={idx}/>))}
     </div>
   )
@@ -206,13 +206,13 @@ const ItemPosition = ({ stock }) => {
 
 const ItemWatchList = ({ stock }) => {
   return (
-    <Link href={`/${stock.ticker}`} className="flex items-center gap-2">
-      <span className="font-bold grow basis-1/4 shrink-0">{stock.ticker}</span>
+    <Link href={`/${stock.ticker}`} className="flex items-center hover:bg-neutral-700 px-4 py-2">
+      <span className="font-bold grow basis-1/4 shrink-0 ">{stock.ticker}</span>
       {/* {stock.changePer>0?  <div className="basis-28 bg-green-400 h-[2px]"></div>:  <div className="basis-28 bg-red-400 h-[2px]"></div>} */}
-      <div className="shrink-0 basis-1/2">
+      <div className="shrink-0 grow-0 basis-1/5 flex justify-center">
         <MiniGraph value={stock.price} lastPrice={stock.lastPrice} />
       </div>
-      <div className="grow-0 pr-4 shrink-0 basis-1/4 flex items-end flex-col gap-2 font-light">
+      <div className="grow pr-4 shrink-0 basis-1/4 flex items-end flex-col gap-2 font-light ">
         <p className="grow text-sm">${stock.price}</p>
         <p className="grow text-xs">{(100*stock.change).toFixed(2) || 0}%</p>
       </div>

@@ -27,9 +27,9 @@ const MiniGraph = ({value,lastPrice}) => {
     }, [value])
 
     return (
-        <div className='w-[120px]'>
+        <div className='w-full'>
 
-            <ResponsiveContainer width="100%" height="100%" minWidth={50} aspect={3} >
+            <ResponsiveContainer width="100%" height="100%" minWidth={50} aspect={2} >
                 <LineChart
                     width={100}
                     height={170}
@@ -42,7 +42,7 @@ const MiniGraph = ({value,lastPrice}) => {
                     }}
                 >
                     <Tooltip isAnimationActive={false} />
-                    <YAxis dataKey={'value'} hide={true} />
+                    <YAxis dataKey={'value'} hide={true} domain={['dataMin-10','dataMax+10']}/>
                     <ReferenceLine ifOverflow="extendDomain" y={lastPrice} stroke="#ddd" strokeDasharray="1 5" />
                     <Line isAnimationActive={false} type="linear" strokeWidth={1} dot={false} dataKey="value" stroke={lastPrice>value?"red":"#07CA0C"} />
                 </LineChart>
