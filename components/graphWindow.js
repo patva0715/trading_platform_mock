@@ -102,7 +102,7 @@ function getTimeSince() {
 
     return differenceInSeconds;
 }
-const GraphWindow = ({ value }) => {
+const GraphWindow = ({ value, lastPrice }) => {
     const now = Date.now()
     const [len,setLen]=useState(0)
     const [priceData, setPriceData] = useState(Array.from({ length: 78 }, (_, index) => ({ value: null, x: index })))
@@ -152,7 +152,7 @@ const GraphWindow = ({ value }) => {
                     >
                         <Tooltip isAnimationActive={false} />
                         <YAxis dataKey={'value'} hide={true} domain={['dataMin-10', 'dataMax+20']} />
-                        <ReferenceLine ifOverflow="extendDomain" y={380} stroke="#ddd" strokeDasharray="1 5" />
+                        <ReferenceLine ifOverflow="extendDomain" y={lastPrice} stroke="#ddd" strokeDasharray="1 5" />
                         <Line isAnimationActive={false} type="linear" strokeWidth={3} dot={false} dataKey="value" stroke="#07CA0C" />
                     </LineChart>
                 </ResponsiveContainer>

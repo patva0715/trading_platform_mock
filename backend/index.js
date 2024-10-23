@@ -56,8 +56,14 @@ wss.on('connection', ws => {
     ws.on('message', (message) => {
         let cli_req = decoder.decode(message)
         if (cli_req === 'getStockPrices') {
+            console.log('stocks');
+            
             // When the client requests stock prices, send them back
-            ws.send(JSON.stringify(stockPrices));
+            ws.send(JSON.stringify({message:'stockPrices',data:stockPrices}));
+        }
+        else if (cli_req.startsWith('getIndivPrice')){
+            let ticker = cli_req.slice(13)
+            ws.send(JSON.stringify({message:'stockPrice',data:stockPrices[ticker]}));
         }
     });
     //   ws.addEventListener('message',(event)=>{
