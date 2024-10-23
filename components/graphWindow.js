@@ -150,7 +150,7 @@ const GraphWindow = ({ value, lastPrice }) => {
                             bottom: 5,
                         }}
                     >
-                        <Tooltip isAnimationActive={false} />
+                        <Tooltip className="bg-transparent" isAnimationActive={false} />
                         <YAxis dataKey={'value'} hide={true} domain={['dataMin-10', 'dataMax+20']} />
                         <ReferenceLine ifOverflow="extendDomain" y={lastPrice} stroke="#ddd" strokeDasharray="1 5" />
                         <Line isAnimationActive={false} type="linear" strokeWidth={3} dot={false} dataKey="value" stroke="#07CA0C" />

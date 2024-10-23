@@ -26,8 +26,6 @@ export default function Home() {
       }
 
       const data = await response.json();
-      console.log(data);
-
       setOwnedStocks(data); // Set the received data to the state
     } catch (error) {
       console.error('Error fetching owned stocks:', error);
@@ -64,13 +62,19 @@ export default function Home() {
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       console.log(data)
-      if (data.message != 'stockPrices') return
-      setStockPrices(data.data);
-      let newUserBal = 0
-      Object.keys(ownedStocks).map((stock) => {
-        newUserBal += ownedStocks[stock].shareCt * data.data[stock]
-      })
-      setUserBal(newUserBal)
+      if (data.message == 'stockPrices') {
+        setStockPrices(data.data);
+        let newUserBal = 0
+        Object.keys(ownedStocks).map((stock) => {
+          newUserBal += ownedStocks[stock].shareCt * data.data[stock]
+        })
+        setUserBal(newUserBal)
+      }else if (data.message=='updateLastPrices'){
+        console.log('lastPrices Updated')
+        setLastPrices(data.data)
+      }else{
+        console.log(data)
+      }
     };
 
     // UpdateStock Interval
@@ -207,12 +211,33 @@ const ItemPosition = ({ stock }) => {
 }
 
 const ItemWatchList = ({ stock }) => {
+  const [priceHistory, setPriceHistory] = useState([])
+  const fetchHistory = (ticker) => {
+    fetch(`http://localhost:5000/history?ticker=${ticker}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch owned stocks');
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log(data)
+        setPriceHistory(data); // Handle the data (e.g., setOwnedStocks(data))
+      })
+      .catch(error => {
+        console.error('Error fetching owned stocks:', error);
+      });
+  }
+  useEffect(() => {
+    fetchHistory(stock.ticker)
+  }, [stock.ticker])
+
   return (
     <Link href={`/${stock.ticker}`} className="flex items-center hover:bg-neutral-700 px-4 py-2">
       <span className="font-bold grow basis-1/4 shrink-0 ">{stock.ticker}</span>
       {/* {stock.changePer>0?  <div className="basis-28 bg-green-400 h-[2px]"></div>:  <div className="basis-28 bg-red-400 h-[2px]"></div>} */}
       <div className="shrink-0 grow-0 basis-1/5 flex justify-center">
-        <MiniGraph value={stock.price} lastPrice={stock.lastPrice} />
+        <MiniGraph value={stock.price} lastPrice={stock.lastPrice} priceHistory={priceHistory} />
       </div>
       <div className="grow shrink-0 basis-1/4 flex items-end flex-col gap-1 font-light ">
         <p className="grow text-sm">${stock.price}</p>

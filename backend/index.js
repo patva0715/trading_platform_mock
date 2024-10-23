@@ -30,22 +30,49 @@ let ownedStocks = {
         shareCt: 1
     }
 }
+let priceHistory = {
+    'SPY': [{ value: 200 }, { value: 200 }, { value: 200 }, { value: 200 }, { value: 200 }, { value: 200 }, { value: 200 }, { value: 200 }, { value: 200 }, { value: 200 }],
+    'AMD': [{ value: 200 }, { value: 200 }, { value: 200 }, { value: 200 }, { value: 200 }, { value: 200 }, { value: 200 }, { value: 200 }, { value: 200 }, { value: 200 }],
+}
 
 // Function to update stock prices by ±1%
 const updateStockPrices = () => {
-    Object.keys(stockPrices).forEach(company => {
+    Object.keys(stockPrices).forEach(ticker => {
         const change = (Math.random() * 4 - 2) * 0.01; // Random change between -1% and +1%
-        stockPrices[company] = (stockPrices[company] * (1 + change)).toFixed(2);
+        let newVal = stockPrices[ticker] * (1 + change)
+        stockPrices[ticker] = (newVal).toFixed(2);
+        priceHistory[ticker].push({value:newVal})
+
     });
 };
+const updateLastPrices = () =>{
+    Object.keys(lastPrices).map((ticker)=>{
+        lastPrices[ticker] = stockPrices[ticker]
+    })
+    console.log('new last prices')
+    console.log(lastPrices)
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({message:"updateLastPrices",data:lastPrices}));
+        }
+    });
+}
+const trimArray = () => {
+    Object.keys(priceHistory).forEach(ticker => {
+        const halfLength = Math.floor(priceHistory[ticker].length / 2);
+        priceHistory[ticker] = priceHistory[ticker].slice(halfLength); // Keep the latest half
+        console.log('Array trimmed:', priceHistory[ticker]);
+    })
 
+};
 // Update stock prices every second
 setInterval(() => {
     updateStockPrices();
     //   console.log(stockPrices)
 }, 1000);
-
-// Create HTTP server and WebSocket server
+// Trim History Arrays every 1 min
+setInterval(trimArray, 60000);
+setInterval(updateLastPrices, 6000);
 
 const decoder = new TextDecoder('utf-8');
 // Handle WebSocket connections
@@ -57,13 +84,13 @@ wss.on('connection', ws => {
         let cli_req = decoder.decode(message)
         if (cli_req === 'getStockPrices') {
             console.log('stocks');
-            
+
             // When the client requests stock prices, send them back
-            ws.send(JSON.stringify({message:'stockPrices',data:stockPrices}));
+            ws.send(JSON.stringify({ message: 'stockPrices', data: stockPrices }));
         }
-        else if (cli_req.startsWith('getIndivPrice')){
+        else if (cli_req.startsWith('getIndivPrice')) {
             let ticker = cli_req.slice(13)
-            ws.send(JSON.stringify({message:'stockPrice',data:stockPrices[ticker]}));
+            ws.send(JSON.stringify({ message: 'stockPrice', data: stockPrices[ticker] }));
         }
     });
     //   ws.addEventListener('message',(event)=>{
@@ -85,6 +112,11 @@ app.get('/ownedStocks', (req, res) => {
 app.get('/lastPrices', (req, res) => {
     // Extract start and end dates from query parameters
     res.json(lastPrices);
+});
+app.get('/history', (req, res) => {
+    const ticker = req.query.ticker;
+    // Extract start and end dates from query parameters
+    res.json(priceHistory[ticker]);
 });
 // Start the server
 server.listen(PORT, () => {
