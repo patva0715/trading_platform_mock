@@ -13,87 +13,72 @@ import NavBar from "@/components/navbar";
 
 export default function Home() {
   const [userBal, setUserBal] = useState(0)
-  const [ownedStocks, setOwnedStocks] = useState({
-    'spy': {
-      shareCt: 1
-    },
-    'amd': {
-      shareCt: 1
-    }
-  })
-  const [stocks, setStocks] = useState({
-    'spy': {
-      price: 100
-    },
-    'amd': {
-      price: 100
-    }
-  })
+  const [ownedStocks, setOwnedStocks] = useState({})
+  const [stockPrices, setStockPrices] = useState({});
+  const [lastPrices, setLastPrices] = useState({});
 
-  const updateStock = () => {
-    Object.keys(stocks).map((stock) => {
-      // Generate number between -1.01 and 1.01
-      let percChange = (1 + Math.random() * 0.02 - 0.01)
-      let newPrice = stocks[stock].price * percChange
-      // console.log(newPrice);
-
-      setStocks((old) => {
-        let a = old
-        a[stock].price = newPrice
-        return a
-      })
-      // Wait Fetch new data
-      // wait for updated UI then move on to next
-    })
-  }
-
-  const updateUserBal = () => {
-    let newUserBal = 0
-    Object.keys(ownedStocks).map((stock) => {
-      newUserBal += ownedStocks[stock].shareCt * stocks[stock].price
-    })
-    setUserBal(newUserBal)
-  }
-
-  useEffect(() => {
-    console.log("Stock List updated")
-  }, [stocks])
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      updateStock()
-      updateUserBal()
-    }, 200);
-  }, [])
   // DIVIDER
+  const fetchOwnedStocks = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/ownedStocks');
+      if (!response.ok) {
+        throw new Error('Failed to fetch owned stocks');
+      }
 
-  const [stockPrices, setStockPrices] = useState({ 'spy': 0, 'amd': 0 });
+      const data = await response.json();
+      console.log(data);
+      
+      setOwnedStocks(data); // Set the received data to the state
+    } catch (error) {
+      console.error('Error fetching owned stocks:', error);
+    }
+  };
+  const fetchLastPrices = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/lastPrices');
+      if (!response.ok) {
+        throw new Error('Failed to fetch owned stocks');
+      }
+      const data = await response.json();
+      setLastPrices(data); // Set the received data to the state
+    } catch (error) {
+      console.error('Error fetching owned stocks:', error);
+    }
+  };
+  useEffect(()=>{
+    fetchOwnedStocks()
+    fetchLastPrices()
+  },[])
 
   useEffect(() => {
+    if(!ownedStocks)return
+
     // Establish a WebSocket connection to the server
     const ws = new WebSocket('ws://localhost:5000');
 
-    // Function to request stock prices every second
     const requestStockPrices = () => {
       ws.send(String('getStockPrices'));
     };
 
-    // When new data is received from the server, update the stock prices
+    // When new data is received from the server, update the stock prices and UserBal
     ws.onmessage = (event) => {
-      console.log(event.data)
       const data = JSON.parse(event.data);
       setStockPrices(data);
+      let newUserBal = 0
+      Object.keys(ownedStocks).map((stock) => {
+        newUserBal += ownedStocks[stock].shareCt * data[stock]
+      })
+      setUserBal(newUserBal)
     };
 
-    // Set an interval to request stock prices every second
+    // UpdateStock Interval
     const interval = setInterval(requestStockPrices, 1000);
 
-    // Clean up WebSocket connection and interval on component unmount
     return () => {
       clearInterval(interval);
       ws.close();
     };
-  }, []);
+  }, [ownedStocks]);
 
   return (
     <>
@@ -106,13 +91,35 @@ export default function Home() {
             <h1 className="text-4xl font-bold">${userBal.toFixed(2)}</h1>
             <p className="text-xs mt-1">$330(31.91%)<span>Today</span></p>
             <GraphWindow value={userBal} />
+            <div className='py-4 px-1 flex gap-2 flex-col'>
+              <div className='flex basis-full gap-2 py-4'>
+                {["1D", "1W", "1M", "YTD", "1Y"].map((range) => (<button key={range} className='font-bold text-white text-sm p-1 hover:bg-green-500 aspect-[3] basis-10 w-auto'>{range}</button>))}
+              </div>
+
+              <div className='flex py-4 border-y-[1px] border-neutral-700'>
+                <span className='text-base font-bold grow'>Buying power</span>
+                <span className='text-base font-bold'>$499.21</span>
+              </div>
+
+              <h2 className="text-2xl font-semibold py-4">Biggest Movers</h2>
+              <div className='flex gap-4'>
+                {['SPY', 'AMD', 'NVDA', 'COIN'].map((stock) => (
+                  <div key={stock} className='basis-[110px] aspect-[4/5] flex items-left p-4 justify-between font-semibold flex-col border-[1px] border-white'>
+                    <p className="text-sm text-right grow">{stock}</p>
+                    <span className='text-xl font-semibold text-green-500'>$123.23</span>
+                    <span className='text-sm font-light text-green-500'>10.54%</span>
+                  </div>
+                ))}
+              </div>
+
+            </div>
           </div>
           <div className="w-1/4 border-[1px] border-neutral-700 rounded-md">
             <h2 className="p-4 border-b-[1px] border-neutral-800 font-bold">Postions</h2>
-            {Object.keys(stockPrices).map(stock=><div key={stock}>{stockPrices[stock]}</div>)}
-            <PositionsWindow ownedStocks={ownedStocks} stocks={stocks} />
+            {/* {Object.keys(stockPrices).map(stock => <div key={stock}>{stockPrices[stock]}</div>)} */}
+            <PositionsWindow ownedStocks={ownedStocks} stocks={stockPrices} />
             <h2 className="p-4 border-y-[1px] border-neutral-800 font-bold">Watch List</h2>
-            <WatchListWindow stocks={stocks} />
+            <WatchListWindow stocks={stockPrices} lastPrices={lastPrices}/>
           </div>
         </main>
       </div>
@@ -124,7 +131,7 @@ export default function Home() {
 const PositionsWindow = ({ ownedStocks, stocks }) => {
   return (
     <div className="p-4 flex flex-col gap-4 text-sm">
-      {Object.keys(ownedStocks).map((stock) => (<ItemPosition stock={{ ...ownedStocks[stock], ticker: stock, price: stocks[stock].price }} key={stock} />)
+      {Object.keys(ownedStocks).map((stock) => (<ItemPosition stock={{ ...ownedStocks[stock], ticker: stock, price: stocks[stock] }} key={stock} />)
       )}
 
       {/* {mockPostions.map((item, idx) => (<ItemPosition position={item} key={idx} />))} */}
@@ -132,10 +139,10 @@ const PositionsWindow = ({ ownedStocks, stocks }) => {
   )
 }
 
-const WatchListWindow = ({ stocks }) => {
+const WatchListWindow = ({ stocks, lastPrices}) => {
   return (
     <div className="p-4 flex flex-col gap-4 text-sm">
-      {mockWatchList.map((item, idx) => (<ItemWatchList watching={item} key={idx} />))}
+      {Object.keys(stocks).map((ticker, idx) => (<ItemWatchList stock={{ price: stocks[ticker], ticker, lastPrice:lastPrices[ticker], change:(stocks[ticker]-lastPrices[ticker])/lastPrices[ticker] }} key={idx}/>))}
     </div>
   )
 }
@@ -197,15 +204,17 @@ const ItemPosition = ({ stock }) => {
   )
 }
 
-const ItemWatchList = ({ watching }) => {
+const ItemWatchList = ({ stock }) => {
   return (
-    <Link href={`/${watching.ticker}`} className="flex items-center gap-2">
-      <span className="font-bold grow">{watching.ticker}</span>
-      {/* {watching.changePer>0?  <div className="basis-28 bg-green-400 h-[2px]"></div>:  <div className="basis-28 bg-red-400 h-[2px]"></div>} */}
-      <MiniGraph />
-      <div className="grow flex items-end flex-col">
-        <p className="grow">${watching.value}</p>
-        <p className="grow">{watching.changePer}%</p>
+    <Link href={`/${stock.ticker}`} className="flex items-center gap-2">
+      <span className="font-bold grow basis-1/4 shrink-0">{stock.ticker}</span>
+      {/* {stock.changePer>0?  <div className="basis-28 bg-green-400 h-[2px]"></div>:  <div className="basis-28 bg-red-400 h-[2px]"></div>} */}
+      <div className="shrink-0 basis-1/2">
+        <MiniGraph value={stock.price} lastPrice={stock.lastPrice} />
+      </div>
+      <div className="grow-0 pr-4 shrink-0 basis-1/4 flex items-end flex-col gap-2 font-light">
+        <p className="grow text-sm">${stock.price}</p>
+        <p className="grow text-xs">{(100*stock.change).toFixed(2) || 0}%</p>
       </div>
     </Link>
   )

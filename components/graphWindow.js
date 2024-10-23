@@ -118,17 +118,6 @@ const GraphWindow = ({ value }) => {
         // console.log(newPrice)
     }, [timeIdx])
 
-    // useEffect(() => {
-    //     const interval = setInterval(() => {
-    //         // setPriceData((prev) => {
-    //         //     let index = Math.floor(getTimeSince() / 300)
-    //         //     console.log(index)
-    //         //     return prev.map((item, i) => (i == index ? { ...item, value: Math.random() } : item))
-    //         // })
-    //         setCurr(x => x + 1)
-    //     }, 1000)
-    //     return () => clearInterval(interval)
-    // }, [])
 
     // Interval that updates current price
     useEffect(() => {
@@ -138,7 +127,7 @@ const GraphWindow = ({ value }) => {
                 return newPrice
             })
             setCurr(x => x + 1)
-        }, 200)
+        }, 1000)
         return () => clearInterval(interval)
     }, [setCurrPrice])
 
@@ -151,7 +140,7 @@ const GraphWindow = ({ value }) => {
         <div>
 
             <div className=' w-full '>
-                <ResponsiveContainer width={'100%'} height={'100%'} aspect={2} >
+                <ResponsiveContainer width={'100%'} height={'100%'} aspect={2.8} >
                     <LineChart
                         width={200}
                         height={300}
@@ -164,28 +153,13 @@ const GraphWindow = ({ value }) => {
                         }}
                     >
                         <Tooltip isAnimationActive={false} />
-                        <YAxis dataKey={'value'} hide={true} domain={['dataMin-10', 'dataMax']} />
-                        <ReferenceLine ifOverflow="extendDomain" y={180} stroke="#ddd" strokeDasharray="1 5" />
-                        <Line isAnimationActive={false} type="linear" strokeWidth={1.5} dot={false} dataKey="value" stroke="#07CA0C" />
+                        <YAxis dataKey={'value'} hide={true} domain={['dataMin-10', 'dataMax+20']} />
+                        <ReferenceLine ifOverflow="extendDomain" y={380} stroke="#ddd" strokeDasharray="1 5" />
+                        <Line isAnimationActive={false} type="linear" strokeWidth={3} dot={false} dataKey="value" stroke="#07CA0C" />
                     </LineChart>
                 </ResponsiveContainer>
             </div>
-            <div className='py-4 px-1 flex gap-2 flex-col border-y-[1px] border-neutral-800'>
-                <div className='flex basis-full gap-2'>
-                    {["1D", "1W", "1M", "YTD", "1Y"].map((range) => (<button key={range} className='bg-neutral-700 text-white p-1 hover:bg-green-500 aspect-[3] basis-10 w-auto'>{range}</button>))}
-                </div>
-                <div className='flex '>
-                    <span className='text-base font-bold grow'>Buying power</span>
-                    <span className='text-base font-bold'>$499.21</span>
 
-                </div>
-                <h2 className="text-2xl font-semibold py-4">Biggest Movers</h2>
-
-                <div className='flex gap-2'>
-                    {['SPY','AMD','NVDA','COIN'].map((stock)=><div key={stock} className='basis-[120px] aspect-square flex items-center justify-center font-semibold text-green-500 flex-col border-[1px] border-green-500'><p>{stock}</p><span className='text-xl font-bold'>10.54%</span></div>)}
-                </div>
-
-            </div>
         </div>
     )
 }

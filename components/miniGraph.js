@@ -2,40 +2,29 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 
-
-
-const MiniGraph = () => {
+const MiniGraph = ({value,lastPrice}) => {
     const now = Date.now()
-    const [priceData, setPriceData] = useState(Array.from({ length: 78 }, (_, index) => ({ value: null, x: index })))
-    const [timeIdx, setCurr] = useState(-1)
+    const [priceData, setPriceData] = useState(Array.from({ length: 50 }, (_, index) => ({ value: null, x: index })))
+    const [timeIdx, setCurr] = useState(0)
     const [currPrice, setCurrPrice] = useState(59)
 
-    const UpdateGraph = useCallback((newPrice) => {
-        setPriceData((prev) => {
+    const UpdateGraph = (newPrice) => {
+ 
+            setPriceData((prev) => {
+                let ar=prev.slice(1)
+                ar.push({value:newPrice,x:50})
             // let index = Math.floor(getTimeSince() / 300)
-            return prev.map((item, i) => {
-                return (i == timeIdx ? { ...item, value: newPrice } : item)
-            })
+            return ar
         })
         // console.log(newPrice)
-    }, [timeIdx])
+    }
 
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrPrice((curr) => {
-                let newPrice = curr + (((Math.random() * .1) - .048) * curr)
-                return newPrice
-            })
-            setCurr(x => x + 1)
-        }, 200)
-        return () => clearInterval(interval)
-    }, [setCurrPrice])
 
     // UPDATE GRAPH WHEN CURR PRICE CHANGES
     useEffect(() => {
-        UpdateGraph(currPrice)
-    }, [currPrice])
+        UpdateGraph(value)
+        // console.log(timeIdx)
+    }, [value])
 
     return (
         <div className='w-[120px]'>
@@ -53,9 +42,9 @@ const MiniGraph = () => {
                     }}
                 >
                     <Tooltip isAnimationActive={false} />
-                    <YAxis dataKey={'value'} hide={true} domain={[20, 80]} />
-                    <ReferenceLine ifOverflow="extendDomain" y={50} stroke="#ddd" strokeDasharray="1 5" />
-                    <Line isAnimationActive={false} type="linear" strokeWidth={1} dot={false} dataKey="value" stroke="#07CA0C" />
+                    <YAxis dataKey={'value'} hide={true} />
+                    <ReferenceLine ifOverflow="extendDomain" y={lastPrice} stroke="#ddd" strokeDasharray="1 5" />
+                    <Line isAnimationActive={false} type="linear" strokeWidth={1} dot={false} dataKey="value" stroke={lastPrice>value?"red":"#07CA0C"} />
                 </LineChart>
             </ResponsiveContainer>
         </div >

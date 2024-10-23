@@ -1,0 +1,10 @@
+[
+    {
+        "ticker":"spy",
+        "lastPrice":120
+    },
+    {
+        "ticker":"amd",
+        "lastPrice":100
+    }
+]
