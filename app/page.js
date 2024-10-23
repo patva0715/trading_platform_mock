@@ -212,9 +212,9 @@ const ItemWatchList = ({ stock }) => {
       <div className="shrink-0 grow-0 basis-1/5 flex justify-center">
         <MiniGraph value={stock.price} lastPrice={stock.lastPrice} />
       </div>
-      <div className="grow pr-4 shrink-0 basis-1/4 flex items-end flex-col gap-2 font-light ">
+      <div className="grow shrink-0 basis-1/4 flex items-end flex-col gap-1 font-light ">
         <p className="grow text-sm">${stock.price}</p>
-        <p className="grow text-xs">{(100*stock.change).toFixed(2) || 0}%</p>
+        {stock.change<0?<p className="grow text-xs text-red-500 font-light">{(100*stock.change).toFixed(2) || 0}%</p>:<p className="grow text-xs text-green-500 font-light">+{(100*stock.change).toFixed(2) || 0}%</p>}
       </div>
     </Link>
   )

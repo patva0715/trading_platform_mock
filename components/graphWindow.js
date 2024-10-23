@@ -104,12 +104,19 @@ function getTimeSince() {
 }
 const GraphWindow = ({ value }) => {
     const now = Date.now()
+    const [len,setLen]=useState(0)
     const [priceData, setPriceData] = useState(Array.from({ length: 78 }, (_, index) => ({ value: null, x: index })))
     const [timeIdx, setCurr] = useState(-1)
     const [currPrice, setCurrPrice] = useState(59)
 
     const UpdateGraph = useCallback((newPrice) => {
-        setPriceData((prev) => {
+            setCurr(x => x + 1)
+            setPriceData((prev) => {
+            if(timeIdx>78){
+                let ar=prev.slice(1)
+                ar.push({value:newPrice,x:78})
+                return ar
+            }
             // let index = Math.floor(getTimeSince() / 300)
             return prev.map((item, i) => {
                 return (i == timeIdx ? { ...item, value: newPrice } : item)
@@ -120,16 +127,7 @@ const GraphWindow = ({ value }) => {
 
 
     // Interval that updates current price
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrPrice((curr) => {
-                let newPrice = curr + (((Math.random() * .1) - .048) * curr)
-                return newPrice
-            })
-            setCurr(x => x + 1)
-        }, 1000)
-        return () => clearInterval(interval)
-    }, [setCurrPrice])
+
 
     // UPDATE GRAPH WHEN CURR PRICE CHANGES
     useEffect(() => {

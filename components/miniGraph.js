@@ -41,7 +41,7 @@ const MiniGraph = ({value,lastPrice}) => {
                         bottom: 0,
                     }}
                 >
-                    <Tooltip isAnimationActive={false} />
+                    {/* <Tooltip isAnimationActive={false} /> */}
                     <YAxis dataKey={'value'} hide={true} domain={['dataMin-10','dataMax+10']}/>
                     <ReferenceLine ifOverflow="extendDomain" y={lastPrice} stroke="#ddd" strokeDasharray="1 5" />
                     <Line isAnimationActive={false} type="linear" strokeWidth={1} dot={false} dataKey="value" stroke={lastPrice>value?"red":"#07CA0C"} />
