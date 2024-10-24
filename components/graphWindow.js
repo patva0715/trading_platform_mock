@@ -40,7 +40,7 @@ const GraphWindow = ({ value, prevClosingPrice }) => {
                             bottom: 5,
                         }}
                     >
-                        <Tooltip className="bg-transparent" isAnimationActive={false} />
+                    <Tooltip content={<CustomTooltip strokeW={3} />} />
                         <YAxis dataKey={'value'} hide={true} domain={['dataMin-10', 'dataMax+20']} />
                         <ReferenceLine ifOverflow="extendDomain" y={prevClosingPrice} stroke="#ddd" strokeDasharray="6 8" />
                         <Line activeDot={true} isAnimationActive={false} type="linear" strokeWidth={3} dot={false} dataKey="value" stroke={prevClosingPrice > value ? "red" : "#07CA0C"} />
@@ -53,6 +53,28 @@ const GraphWindow = ({ value, prevClosingPrice }) => {
 }
 
 
+const CustomTooltip = ({ active, payload, label, strokeW }) => {
+    if (active && payload && payload.length) {
+        if (strokeW) return (
+            <div className="custom-tooltip p-1 bg-black text-lg">
+                <p>${Number(payload[0].value).toFixed(2)}</p>
+                {/* <p className="label">{`${label} : ${payload[0].value}`}</p> */}
+                {/* <p className="intro">{getIntroOfPage(label)}</p> */}
+                {/* <p className="desc">Anything you want can be displayed here.</p> */}
+            </div>
+        )
+        else {
+            return <div className="custom-tooltip p-1 bg-black text-[10px]">
+                <p>${Number(payload[0].value).toFixed(2)}</p>
+                {/* <p className="label">{`${label} : ${payload[0].value}`}</p> */}
+                {/* <p className="intro">{getIntroOfPage(label)}</p> */}
+                {/* <p className="desc">Anything you want can be displayed here.</p> */}
+            </div>
+        }
 
+    }
+
+    return null;
+};
 
 export default GraphWindow
