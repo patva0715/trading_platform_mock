@@ -43,17 +43,16 @@ let priceHistory = {
 const updateStockPrices = () => {
     if (marketClosed) {
         Object.keys(stockPrices).forEach(ticker => {
-            priceHistory[ticker].push({value:stockPrices[ticker]})
+            priceHistory[ticker].push({value:Number(stockPrices[ticker])})
             // console.log(priceHistory[ticker][-1])
         })
         return
     }
-
     Object.keys(stockPrices).forEach(ticker => {
-        const change = (Math.random() * 4 - 2) * 0.01; // Random change between -1% and +1%
+        const change = (Math.random() * 8 - 4) * 0.01; // Random change between -1% and +1%
         let newVal = stockPrices[ticker] * (1 + change)
         stockPrices[ticker] = (newVal).toFixed(2);
-        priceHistory[ticker].push({ value: newVal })
+        priceHistory[ticker].push(({ value: Number(newVal) }))
 
     });
 };
@@ -65,7 +64,7 @@ const updateLastPrices = () => {
     console.log(lastPrices)
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ message: "updateLastPrices", data: lastPrices }));
+            client.send(JSON.stringify({ message: "updateLastPrices", data: {lastPrices,priceHistory} }));
         }
     });
 }
@@ -138,6 +137,10 @@ app.get('/ownedStocks', (req, res) => {
 app.get('/lastPrices', (req, res) => {
     // Extract start and end dates from query parameters
     res.json(lastPrices);
+});
+app.get('/priceHistories', (req, res) => {
+    // Extract start and end dates from query parameters
+    res.json(priceHistory);
 });
 app.get('/history', (req, res) => {
     const ticker = req.query.ticker;

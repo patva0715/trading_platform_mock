@@ -17,6 +17,7 @@ export default function Home() {
   const [ownedStocks, setOwnedStocks] = useState({})
   const [stockPrices, setStockPrices] = useState({});
   const [lastPrices, setLastPrices] = useState({});
+  const [priceHistories, setPriceHistories] = useState({})
 
   // DIVIDER
   const fetchOwnedStocks = async () => {
@@ -44,9 +45,22 @@ export default function Home() {
       console.error('Error fetching owned stocks:', error);
     }
   }
+  const fetchPriceHistories = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/priceHistories');
+      if (!response.ok) {
+        throw new Error('Failed to fetch owned stocks');
+      }
+      const data = await response.json();
+      setPriceHistories(data); // Set the received data to the state
+    } catch (error) {
+      console.error('Error fetching owned stocks:', error);
+    }
+  }
   useEffect(() => {
     fetchOwnedStocks()
     fetchLastPrices()
+    fetchPriceHistories()
   }, [])
 
   useEffect(() => {
@@ -61,8 +75,8 @@ export default function Home() {
     // When new data is received from the server, update the stock prices and UserBal
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log(data)
       if (data.message == 'updateStockPrices') {
+        console.log('Stock Prices Updated')
         setMarketClosed(data.marketClosed)
         setStockPrices(data.data);
         let newUserBal = 0
@@ -71,8 +85,12 @@ export default function Home() {
         })
         setUserBal(newUserBal)
       } else if (data.message == 'updateLastPrices') {
-        console.log('lastPrices Updated')
-        setLastPrices(data.data)
+        console.log('lastPrices and HistoryUpdated')
+        setLastPrices(data.data.lastPrices)
+        setPriceHistories(data.data.priceHistory)
+      }else if (data.message == 'updatePriceHistories') {
+        console.log('Price History Updated')
+        setPriceHistories(data.data)
       } else {
         console.log(data)
       }
@@ -131,7 +149,7 @@ export default function Home() {
               {/* {Object.keys(stockPrices).map(stock => <div key={stock}>{stockPrices[stock]}</div>)} */}
               <PositionsWindow ownedStocks={ownedStocks} stocks={stockPrices} />
               <h2 className="p-4 border-y-[1px] border-neutral-800 font-bold">Watch List</h2>
-              <WatchListWindow stocks={stockPrices} lastPrices={lastPrices} marketClosed={marketClosed} />
+              <WatchListWindow stocks={stockPrices} lastPrices={lastPrices} marketClosed={marketClosed} priceHistories={priceHistories}/>
             </div>
 
           </div>
@@ -153,10 +171,10 @@ const PositionsWindow = ({ ownedStocks, stocks }) => {
   )
 }
 
-const WatchListWindow = ({ stocks, lastPrices, marketClosed }) => {
+const WatchListWindow = ({ stocks, lastPrices, marketClosed, priceHistories }) => {
   return (
     <div className="flex flex-col text-sm">
-      {Object.keys(stocks).map((ticker, idx) => (<ItemWatchList marketClosed={marketClosed} stock={{ price: stocks[ticker], ticker, lastPrice: lastPrices[ticker], change: (stocks[ticker] - lastPrices[ticker]) / lastPrices[ticker] }} key={idx} />))}
+      {Object.keys(stocks).map((ticker, idx) => (<ItemWatchList priceHistory={priceHistories[ticker]} marketClosed={marketClosed} stock={{ price: stocks[ticker], ticker, lastPrice: lastPrices[ticker], change: (stocks[ticker] - lastPrices[ticker]) / lastPrices[ticker] }} key={idx} />))}
     </div>
   )
 }
@@ -206,7 +224,6 @@ const mockWatchList = [{
 },]
 
 const ItemPosition = ({ stock }) => {
-  // console.log(stock)
   return (
     <div className="flex">
       <div className="grow">
@@ -218,35 +235,35 @@ const ItemPosition = ({ stock }) => {
   )
 }
 
-const ItemWatchList = ({ stock, marketClosed }) => {
-  const [priceHistory, setPriceHistory] = useState([])
-  const fetchHistory = () => {
-    fetch(`http://localhost:5000/history?ticker=${stock.ticker}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to fetch owned stocks');
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('FETCHING NEW HISTORY')
-        // console.log(data)
-        setPriceHistory(data); // Handle the data (e.g., setOwnedStocks(data))
-      })
-      .catch(error => {
-        console.error('Error fetching owned stocks:', error);
-      });
-  }
-  useEffect(() => {
-    fetchHistory()
-  }, [stock.ticker])
+const ItemWatchList = ({ stock,priceHistory, marketClosed }) => {
+  // const [priceHistory, setPriceHistory] = useState([])
+  // const fetchHistory = () => {
+  //   fetch(`http://localhost:5000/history?ticker=${stock.ticker}`)
+  //     .then(response => {
+  //       if (!response.ok) {
+  //         throw new Error('Failed to fetch owned stocks');
+  //       }
+  //       return response.json();
+  //     })
+  //     .then(data => {
+  //       console.log('FETCHING NEW HISTORY')
+  //       // console.log(data)
+  //       setPriceHistory(data); // Handle the data (e.g., setOwnedStocks(data))
+  //     })
+  //     .catch(error => {
+  //       console.error('Error fetching owned stocks:', error);
+  //     });
+  // }
+  // useEffect(() => {
+  //   fetchHistory()
+  // }, [stock.ticker])
 
   return (
     <Link href={`/${stock.ticker}`} className="flex items-center hover:bg-neutral-700 px-4 py-2">
       <span className="font-bold grow basis-1/4 shrink-0 ">{stock.ticker}</span>
       {/* {stock.changePer>0?  <div className="basis-28 bg-green-400 h-[2px]"></div>:  <div className="basis-28 bg-red-400 h-[2px]"></div>} */}
       <div className="shrink-0 grow-0 basis-1/5 flex justify-center">
-        <MiniGraph fetchHistory={fetchHistory} value={stock.price} lastPrice={stock.lastPrice} priceHistory={priceHistory} marketClosed={marketClosed} />
+        <MiniGraph  value={stock.price} lastPrice={stock.lastPrice} priceHistory={priceHistory} marketClosed={marketClosed} />
       </div>
       <div className="grow shrink-0 basis-1/4 flex items-end flex-col gap-1 font-light ">
         <p className="grow text-sm">${stock.price}</p>

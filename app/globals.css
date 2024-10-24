@@ -25,3 +25,33 @@ body {
     text-wrap: balance;
   }
 }
+
+footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 20vh;
+  margin: 0;
+  background-color: #f0f0f0;
+}
+
+.moving-box {
+  width: 100px;
+    transform: translateX(+50x);
+    height: 100px;
+  background-color: #4CAF50;
+  position: relative;
+  animation: moveLeftRight 1.5s infinite ease-in-out;
+}
+
+@keyframes moveLeftRight {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(350px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}

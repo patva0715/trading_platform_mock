@@ -27,11 +27,12 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={`${inter.className} ${geistSans.variable} ${geistMono.variable} antialiased bg-black`} >
 
-  
+
 
         {children}
 
         <footer className="p-4 bg-neutral-900">
+          <div className="moving-box"></div>
           <p>Project by Patrick Valera 2024</p>
         </footer>
 
