@@ -13,6 +13,7 @@ import NavBar from "@/components/navbar";
 
 export default function Home() {
   const [userBal, setUserBal] = useState(0)
+  const [marketClosed, setMarketClosed] = useState(false)
   const [ownedStocks, setOwnedStocks] = useState({})
   const [stockPrices, setStockPrices] = useState({});
   const [lastPrices, setLastPrices] = useState({});
@@ -50,7 +51,6 @@ export default function Home() {
 
   useEffect(() => {
     if (!ownedStocks) return
-
     // Establish a WebSocket connection to the server
     const ws = new WebSocket('ws://localhost:5000');
 
@@ -62,17 +62,18 @@ export default function Home() {
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       console.log(data)
-      if (data.message == 'stockPrices') {
+      if (data.message == 'updateStockPrices') {
+        setMarketClosed(data.marketClosed)
         setStockPrices(data.data);
         let newUserBal = 0
         Object.keys(ownedStocks).map((stock) => {
           newUserBal += ownedStocks[stock].shareCt * data.data[stock]
         })
         setUserBal(newUserBal)
-      }else if (data.message=='updateLastPrices'){
+      } else if (data.message == 'updateLastPrices') {
         console.log('lastPrices Updated')
         setLastPrices(data.data)
-      }else{
+      } else {
         console.log(data)
       }
     };
@@ -120,12 +121,19 @@ export default function Home() {
 
             </div>
           </div>
-          <div className="w-1/4 border-[1px] border-neutral-700 rounded-md">
-            <h2 className="p-4 border-b-[1px] border-neutral-800 font-bold">Postions</h2>
-            {/* {Object.keys(stockPrices).map(stock => <div key={stock}>{stockPrices[stock]}</div>)} */}
-            <PositionsWindow ownedStocks={ownedStocks} stocks={stockPrices} />
-            <h2 className="p-4 border-y-[1px] border-neutral-800 font-bold">Watch List</h2>
-            <WatchListWindow stocks={stockPrices} lastPrices={lastPrices} />
+          <div className="w-1/4 ">
+            <div className="p-4 border-b-[1px] border-neutral-700 flex mb-6">
+              <span className="grow">Market</span>
+              {marketClosed ? <span className="text-red-500">Closed</span> : <span className="text-green-500">Open</span>}
+            </div>
+            <div className="border-[1px] rounded-md border-neutral-700 ">
+              <h2 className="p-4 border-b-[1px] border-neutral-800 font-bold">Postions</h2>
+              {/* {Object.keys(stockPrices).map(stock => <div key={stock}>{stockPrices[stock]}</div>)} */}
+              <PositionsWindow ownedStocks={ownedStocks} stocks={stockPrices} />
+              <h2 className="p-4 border-y-[1px] border-neutral-800 font-bold">Watch List</h2>
+              <WatchListWindow stocks={stockPrices} lastPrices={lastPrices} marketClosed={marketClosed} />
+            </div>
+
           </div>
         </main>
       </div>
@@ -145,10 +153,10 @@ const PositionsWindow = ({ ownedStocks, stocks }) => {
   )
 }
 
-const WatchListWindow = ({ stocks, lastPrices }) => {
+const WatchListWindow = ({ stocks, lastPrices, marketClosed }) => {
   return (
     <div className="flex flex-col text-sm">
-      {Object.keys(stocks).map((ticker, idx) => (<ItemWatchList stock={{ price: stocks[ticker], ticker, lastPrice: lastPrices[ticker], change: (stocks[ticker] - lastPrices[ticker]) / lastPrices[ticker] }} key={idx} />))}
+      {Object.keys(stocks).map((ticker, idx) => (<ItemWatchList marketClosed={marketClosed} stock={{ price: stocks[ticker], ticker, lastPrice: lastPrices[ticker], change: (stocks[ticker] - lastPrices[ticker]) / lastPrices[ticker] }} key={idx} />))}
     </div>
   )
 }
@@ -210,10 +218,10 @@ const ItemPosition = ({ stock }) => {
   )
 }
 
-const ItemWatchList = ({ stock }) => {
+const ItemWatchList = ({ stock, marketClosed }) => {
   const [priceHistory, setPriceHistory] = useState([])
-  const fetchHistory = (ticker) => {
-    fetch(`http://localhost:5000/history?ticker=${ticker}`)
+  const fetchHistory = () => {
+    fetch(`http://localhost:5000/history?ticker=${stock.ticker}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Failed to fetch owned stocks');
@@ -221,7 +229,8 @@ const ItemWatchList = ({ stock }) => {
         return response.json();
       })
       .then(data => {
-        console.log(data)
+        console.log('FETCHING NEW HISTORY')
+        // console.log(data)
         setPriceHistory(data); // Handle the data (e.g., setOwnedStocks(data))
       })
       .catch(error => {
@@ -229,7 +238,7 @@ const ItemWatchList = ({ stock }) => {
       });
   }
   useEffect(() => {
-    fetchHistory(stock.ticker)
+    fetchHistory()
   }, [stock.ticker])
 
   return (
@@ -237,7 +246,7 @@ const ItemWatchList = ({ stock }) => {
       <span className="font-bold grow basis-1/4 shrink-0 ">{stock.ticker}</span>
       {/* {stock.changePer>0?  <div className="basis-28 bg-green-400 h-[2px]"></div>:  <div className="basis-28 bg-red-400 h-[2px]"></div>} */}
       <div className="shrink-0 grow-0 basis-1/5 flex justify-center">
-        <MiniGraph value={stock.price} lastPrice={stock.lastPrice} priceHistory={priceHistory} />
+        <MiniGraph fetchHistory={fetchHistory} value={stock.price} lastPrice={stock.lastPrice} priceHistory={priceHistory} marketClosed={marketClosed} />
       </div>
       <div className="grow shrink-0 basis-1/4 flex items-end flex-col gap-1 font-light ">
         <p className="grow text-sm">${stock.price}</p>
