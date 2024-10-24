@@ -76,7 +76,7 @@ const MiniGraph = ({ value, lastPrice, priceHistory, marketClosed, strokeW }) =>
                     <XAxis domain={[0, 44]} hide={true} type="number" dataKey="x" name="stature" unit="cm" />
                     <YAxis domain={[lastPrice * .85, lastPrice * 1.15]} type="number" hide={true} dataKey="value" name="weight" unit="kg" />
                     <Bar dataKey="value" barSize={30} fill="red" />
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip strokeW={strokeW} />} />
                     {/* <Legend /> */}
                     <ReferenceLine ifOverflow="extendDomain" y={lastPrice} stroke="#ddd" strokeDasharray="1 5" />
                     <Scatter isAnimationActive={true} name="A school" data={priceData} fill={lastPrice > value ? "red" : "#07CA0C"} line={{ strokeWidth: strokeW || 1 }} shape={<></>} />
@@ -85,16 +85,25 @@ const MiniGraph = ({ value, lastPrice, priceHistory, marketClosed, strokeW }) =>
         </div >
     )
 }
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, strokeW }) => {
     if (active && payload && payload.length) {
-        return (
-            <div className="custom-tooltip p-2 bg-black text-lg">
+        if (strokeW) return (
+            <div className="custom-tooltip p-1 bg-black text-lg">
                 <p>${Number(payload[0].value).toFixed(2)}</p>
                 {/* <p className="label">{`${label} : ${payload[0].value}`}</p> */}
                 {/* <p className="intro">{getIntroOfPage(label)}</p> */}
                 {/* <p className="desc">Anything you want can be displayed here.</p> */}
             </div>
-        );
+        )
+        else {
+            return <div className="custom-tooltip p-1 bg-black text-[10px]">
+                <p>${Number(payload[0].value).toFixed(2)}</p>
+                {/* <p className="label">{`${label} : ${payload[0].value}`}</p> */}
+                {/* <p className="intro">{getIntroOfPage(label)}</p> */}
+                {/* <p className="desc">Anything you want can be displayed here.</p> */}
+            </div>
+        }
+
     }
 
     return null;

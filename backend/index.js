@@ -8,7 +8,7 @@ app.use(cors());
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 const decoder = new TextDecoder('utf-8');
-
+const csuData = require('./csu')
 // Initial stock prices and last price
 let closingBalPrices = {
     'user': 0
@@ -21,35 +21,45 @@ let userBalances = {
 }
 let ownedStocks = {
     user: {
-        'SPY': {
-            shareCt: 1
+        'FUL': {
+            shareCt: 1,
+            avgCost: 100
         },
-        'AMD': {
-            shareCt: 1
+        'POM': {
+            shareCt: 1,
+            avgCost: 120
         }
     }
 }
+let getStartingPrice = (data1) => {
+    let obj = {}
+    Object.keys(data1).map(ticker => {
+        let csu = data1[ticker]
+        const basePrice = (csu.avgCost * csu.gradRate/100) / (csu.acceptanceRate + 0.5);
+        const adjustment = csu.bodyCount *.0001;
+    
+        // Final price, rounded to two decimal places
+        const startingPrice = parseFloat((basePrice + adjustment).toFixed(2));
+        obj[ticker] = startingPrice
+    })
+
+    return (obj)
+
+}
+let genHistory = ()=>{
+    let obj = {}
+    Object.keys(stockPrices).map(ticker=>{
+        obj[ticker] = []
+    })
+    return obj
+}
 let marketClosed = true
-let stockPrices = {
-    'SPY': 200.0, // Initial price for Company A
-    'AMD': 200.0, // Initial price for Company B
-    'AAPL': 150.0, // Initial price for Apple
-    'TSLA': 230.0, // Initial price for Tesla
-    'GOOGL': 250.0, // Initial price for Alphabet (Google)
-    'AMZN': 150.0, // Initial price for Amazon
-    'MSFT': 300.0  // Initial price for Microsoft
-};
+let stockPrices =getStartingPrice(csuData.csuData)
 let lastPrices = { ...stockPrices }
 
-let priceHistory = {
-    'SPY': [], // Initial price for Company A
-    'AMD': [], // Initial price for Company B
-    'AAPL': [], // Initial price for Apple
-    'TSLA': [], // Initial price for Tesla
-    'GOOGL': [], // Initial price for Alphabet (Google)
-    'AMZN': [], // Initial price for Amazon
-    'MSFT': []  // Initial price for Microsoft
-}
+let priceHistory = genHistory()
+
+
 
 // Function to update stock prices by ±1%
 const updateStockPrices = () => {
@@ -83,8 +93,8 @@ const updateLastPrices = () => {
 const updateClosingBalances = () => {
     Object.keys(closingBalPrices).map((user) => {
         let bal = 0
-        Object.keys(ownedStocks[user]).map((ticker)=>{
-            bal+=(ownedStocks[user][ticker].shareCt*stockPrices[ticker])
+        Object.keys(ownedStocks[user]).map((ticker) => {
+            bal += (ownedStocks[user][ticker].shareCt * stockPrices[ticker])
         })
         closingBalPrices[user] = bal
     })

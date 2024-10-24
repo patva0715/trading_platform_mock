@@ -45,7 +45,7 @@ export default function Home() {
     } catch (error) {
       console.error('Error fetching owned stocks:', error);
     }
-  }; 
+  };
   const fetchLastPrices = async () => {
     try {
       const response = await fetch('http://localhost:5000/lastPrices');
@@ -102,14 +102,14 @@ export default function Home() {
         console.log('lastPrices and HistoryUpdated')
         setLastPrices(data.data.lastPrices)
         setPriceHistories(data.data.priceHistory)
-      }else if (data.message == 'updatePriceHistories') {
+      } else if (data.message == 'updatePriceHistories') {
         console.log('Price History Updated')
         setPriceHistories(data.data)
-      }  else if (data.message == 'updateClosingBal') {
+      } else if (data.message == 'updateClosingBal') {
         console.log('Closing Balance Price Updataed')
         setClosingBalance(data.data.closingBalPrices['user'])
       }
-      
+
       else {
         console.log(data)
       }
@@ -133,8 +133,13 @@ export default function Home() {
           <div className="w-3/4">
             <h1 className="text-4xl ">Investing</h1>
             <h1 className="text-4xl ">${userBal.toFixed(2)}</h1>
-            {closingBalance>userBal? <p className="text-xs mt-1 text-red-500">-${(userBal-closingBalance).toFixed(2)}-({(100*(userBal-closingBalance)/closingBalance).toFixed(2)})<span>Today</span></p>: <p className="text-xs mt-1 text-green-500">+${(userBal-closingBalance).toFixed(2)} ({(100*(userBal-closingBalance)/closingBalance).toFixed(2)}%)<span className="text-white">Today</span></p>}
-           
+            <p className='text-xs mt-1 flex gap-1'>
+              {userBal ? closingBalance > userBal ?
+                <span className=" text-red-500">${(Math.abs(closingBalance - userBal)).toFixed(2)} ({(100 * (closingBalance - userBal) / closingBalance).toFixed(2)}%)</span> :
+                <span className=" text-green-500">${(Math.abs(closingBalance - userBal)).toFixed(2)} ({(100 * (closingBalance - userBal) / closingBalance).toFixed(2)}%)</span> : <></>}
+
+              <span>{marketClosed ? 'Premarket' : 'Today'}</span>
+            </p>
             <GraphWindow value={userBal} prevClosingPrice={closingBalance} />
             <div className='py-4 px-1 flex gap-2 flex-col'>
               <div className='flex basis-full gap-2 py-4'>
@@ -169,7 +174,7 @@ export default function Home() {
               {/* {Object.keys(stockPrices).map(stock => <div key={stock}>{stockPrices[stock]}</div>)} */}
               <PositionsWindow ownedStocks={ownedStocks} stocks={stockPrices} />
               <h2 className="p-4 border-y-[1px] border-neutral-800 font-bold">Watch List</h2>
-              <WatchListWindow stocks={stockPrices} lastPrices={lastPrices} marketClosed={marketClosed} priceHistories={priceHistories}/>
+              <WatchListWindow stocks={stockPrices} lastPrices={lastPrices} marketClosed={marketClosed} priceHistories={priceHistories} />
             </div>
 
           </div>
@@ -255,7 +260,7 @@ const ItemPosition = ({ stock }) => {
   )
 }
 
-const ItemWatchList = ({ stock,priceHistory, marketClosed }) => {
+const ItemWatchList = ({ stock, priceHistory, marketClosed }) => {
   // const [priceHistory, setPriceHistory] = useState([])
   // const fetchHistory = () => {
   //   fetch(`http://localhost:5000/history?ticker=${stock.ticker}`)
@@ -283,7 +288,7 @@ const ItemWatchList = ({ stock,priceHistory, marketClosed }) => {
       <span className="font-bold grow basis-1/4 shrink-0 ">{stock.ticker}</span>
       {/* {stock.changePer>0?  <div className="basis-28 bg-green-400 h-[2px]"></div>:  <div className="basis-28 bg-red-400 h-[2px]"></div>} */}
       <div className="shrink-0 grow-0 basis-1/5 flex justify-center">
-        <MiniGraph  value={stock.price} lastPrice={stock.lastPrice} priceHistory={priceHistory} marketClosed={marketClosed} />
+        <MiniGraph value={stock.price} lastPrice={stock.lastPrice} priceHistory={priceHistory} marketClosed={marketClosed} />
       </div>
       <div className="grow shrink-0 basis-1/4 flex items-end flex-col gap-1 font-light ">
         <p className="grow text-sm">${stock.price}</p>

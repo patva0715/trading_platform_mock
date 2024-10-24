@@ -42,7 +42,7 @@ const GraphWindow = ({ value, prevClosingPrice }) => {
                     >
                         <Tooltip className="bg-transparent" isAnimationActive={false} />
                         <YAxis dataKey={'value'} hide={true} domain={['dataMin-10', 'dataMax+20']} />
-                        <ReferenceLine ifOverflow="extendDomain" y={prevClosingPrice} stroke="#ddd" strokeDasharray="1 5" />
+                        <ReferenceLine ifOverflow="extendDomain" y={prevClosingPrice} stroke="#ddd" strokeDasharray="6 8" />
                         <Line activeDot={true} isAnimationActive={false} type="linear" strokeWidth={3} dot={false} dataKey="value" stroke={prevClosingPrice > value ? "red" : "#07CA0C"} />
                     </LineChart>
                 </ResponsiveContainer>
