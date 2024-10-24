@@ -18,7 +18,7 @@ export default function Home() {
   const [stockPrices, setStockPrices] = useState({});
   const [lastPrices, setLastPrices] = useState({});
   const [priceHistories, setPriceHistories] = useState({})
-
+  const [closingBalance, setClosingBalance] = useState(0)
   // DIVIDER
   const fetchOwnedStocks = async () => {
     try {
@@ -33,6 +33,19 @@ export default function Home() {
       console.error('Error fetching owned stocks:', error);
     }
   };
+  const fetchClosingBalance = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/closingBalance');
+      if (!response.ok) {
+        throw new Error('Failed to fetch owned stocks');
+      }
+      const data = await response.json();
+      console.log(data)
+      setClosingBalance(data); // Set the received data to the state
+    } catch (error) {
+      console.error('Error fetching owned stocks:', error);
+    }
+  }; 
   const fetchLastPrices = async () => {
     try {
       const response = await fetch('http://localhost:5000/lastPrices');
@@ -61,6 +74,7 @@ export default function Home() {
     fetchOwnedStocks()
     fetchLastPrices()
     fetchPriceHistories()
+    fetchClosingBalance()
   }, [])
 
   useEffect(() => {
@@ -91,7 +105,12 @@ export default function Home() {
       }else if (data.message == 'updatePriceHistories') {
         console.log('Price History Updated')
         setPriceHistories(data.data)
-      } else {
+      }  else if (data.message == 'updateClosingBal') {
+        console.log('Closing Balance Price Updataed')
+        setClosingBalance(data.data.closingBalPrices['user'])
+      }
+      
+      else {
         console.log(data)
       }
     };
@@ -114,8 +133,9 @@ export default function Home() {
           <div className="w-3/4">
             <h1 className="text-4xl ">Investing</h1>
             <h1 className="text-4xl ">${userBal.toFixed(2)}</h1>
-            <p className="text-xs mt-1">$330(31.91%)<span>Today</span></p>
-            <GraphWindow value={userBal} />
+            {closingBalance>userBal? <p className="text-xs mt-1 text-red-500">-${(userBal-closingBalance).toFixed(2)}-({(100*(userBal-closingBalance)/closingBalance).toFixed(2)})<span>Today</span></p>: <p className="text-xs mt-1 text-green-500">+${(userBal-closingBalance).toFixed(2)} ({(100*(userBal-closingBalance)/closingBalance).toFixed(2)}%)<span className="text-white">Today</span></p>}
+           
+            <GraphWindow value={userBal} prevClosingPrice={closingBalance} />
             <div className='py-4 px-1 flex gap-2 flex-col'>
               <div className='flex basis-full gap-2 py-4'>
                 {["1D", "1W", "1M", "YTD", "1Y"].map((range) => (<button key={range} className='font-bold text-white text-sm p-1 hover:bg-green-500 aspect-[3] basis-10 w-auto'>{range}</button>))}

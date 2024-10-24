@@ -9,7 +9,26 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 const decoder = new TextDecoder('utf-8');
 
-// Initial stock prices and last prices
+// Initial stock prices and last price
+let closingBalPrices = {
+    'user': 0
+};
+let balHistory = {
+    'user': [{ value: 220 }, { value: 250 }, { value: 220 }, { value: 220 },]
+}
+let userBalances = {
+    'user': 0
+}
+let ownedStocks = {
+    user: {
+        'SPY': {
+            shareCt: 1
+        },
+        'AMD': {
+            shareCt: 1
+        }
+    }
+}
 let marketClosed = true
 let stockPrices = {
     'SPY': 200.0, // Initial price for Company A
@@ -21,14 +40,7 @@ let stockPrices = {
     'MSFT': 300.0  // Initial price for Microsoft
 };
 let lastPrices = { ...stockPrices }
-let ownedStocks = {
-    'SPY': {
-        shareCt: 1
-    },
-    'AMD': {
-        shareCt: 1
-    }
-}
+
 let priceHistory = {
     'SPY': [], // Initial price for Company A
     'AMD': [], // Initial price for Company B
@@ -43,7 +55,7 @@ let priceHistory = {
 const updateStockPrices = () => {
     if (marketClosed) {
         Object.keys(stockPrices).forEach(ticker => {
-            priceHistory[ticker].push({value:Number(stockPrices[ticker])})
+            priceHistory[ticker].push({ value: Number(stockPrices[ticker]) })
             // console.log(priceHistory[ticker][-1])
         })
         return
@@ -61,47 +73,66 @@ const updateLastPrices = () => {
         lastPrices[ticker] = stockPrices[ticker]
     })
     console.log('Updated Prev Closing Price')
-    console.log(lastPrices)
+    // console.log(lastPrices)
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ message: "updateLastPrices", data: {lastPrices,priceHistory} }));
+            client.send(JSON.stringify({ message: "updateLastPrices", data: { lastPrices, priceHistory } }));
+        }
+    });
+}
+const updateClosingBalances = () => {
+    Object.keys(closingBalPrices).map((user) => {
+        let bal = 0
+        Object.keys(ownedStocks[user]).map((ticker)=>{
+            bal+=(ownedStocks[user][ticker].shareCt*stockPrices[ticker])
+        })
+        closingBalPrices[user] = bal
+    })
+    console.log('Updated user closing bal prices')
+    console.log(closingBalPrices)
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({ message: "updateClosingBal", data: { closingBalPrices } }));
         }
     });
 }
 const prunePriceHistory = () => {
-    if (marketClosed)return
+    if (marketClosed) return
     Object.keys(priceHistory).forEach(ticker => {
         priceHistory[ticker] = []
-        // const halfLength = Math.floor(priceHistory[ticker].length / 2);
-        // priceHistory[ticker] = priceHistory[ticker].slice(halfLength); // Keep the latest half
-        // console.log('Price History Pruned:', { ticker });
+    })
+    Object.keys(balHistory).forEach(user => {
+        balHistory[user] = []
     })
 
 };
 const openMarket = () => {
-    console.log('Market Open')
+    console.log('===Market Open===')
     setTimeout(closeMarket, 30000)
     marketClosed = false
 }
 
-const closeMarket = () =>{
+const closeMarket = () => {
     console.log('Market Closed')
     prunePriceHistory()
-    marketClosed=true
+    marketClosed = true
     updateLastPrices()
-    setTimeout(openMarket,15000)
+    updateClosingBalances()
+    setTimeout(openMarket, 15000)
 }
 // Update stock prices every second
 setInterval(() => {
     updateStockPrices();
 }, 1000);
+
 // Trim History Arrays every 1 min
 // setInterval(prunePriceHistory, 60000);
 // setInterval(updateLastPrices, 60000);
 // Open market every 60 secs 90-30sec(closing duration)
 // setInterval(openMarket, 30000);
 
-setTimeout(openMarket,5000)
+// setTimeout(openMarket, 1000)
+openMarket()
 // Handle WebSocket connections
 wss.on('connection', ws => {
     console.log('New client connected');
@@ -115,7 +146,7 @@ wss.on('connection', ws => {
         }
         else if (cli_req.startsWith('getIndivPrice')) {
             let ticker = cli_req.slice(13)
-            ws.send(JSON.stringify({ message: 'updateStockPrices', data: stockPrices[ticker] }));
+            ws.send(JSON.stringify({ message: 'updateIndiv', data: stockPrices[ticker], marketClosed }));
         }
     });
     //   ws.addEventListener('message',(event)=>{
@@ -132,11 +163,15 @@ wss.on('connection', ws => {
 // DIVIDER GET BALANCE HISTORY
 app.get('/ownedStocks', (req, res) => {
     // Extract start and end dates from query parameters
-    res.json(ownedStocks);
+    res.json(ownedStocks['user']);
 });
 app.get('/lastPrices', (req, res) => {
     // Extract start and end dates from query parameters
     res.json(lastPrices);
+});
+app.get('/closingBalance', (req, res) => {
+    // Extract start and end dates from query parameters
+    res.json(closingBalPrices['user']);
 });
 app.get('/priceHistories', (req, res) => {
     // Extract start and end dates from query parameters

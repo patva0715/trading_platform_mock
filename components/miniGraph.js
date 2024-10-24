@@ -1,8 +1,8 @@
 "use client"
 import React, { useCallback, useEffect, useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, ScatterChart, Scatter } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, ScatterChart, Scatter, ComposedChart, Bar } from 'recharts';
 
-const MiniGraph = ({ value, lastPrice, priceHistory, marketClosed }) => {
+const MiniGraph = ({ value, lastPrice, priceHistory, marketClosed, strokeW }) => {
     // if (!priceHistory) return <></>
     // const [priceData, setPriceData] = useState([...priceHistory, ...Array.from({ length: 50 }, (_, index) => ({ value: null}))] )
     const [priceData, setPriceData] = useState([])
@@ -16,14 +16,10 @@ const MiniGraph = ({ value, lastPrice, priceHistory, marketClosed }) => {
     //     setCurrIdx(priceHistory.length)
     // }
     const UpdateGraph = (newPrice) => {
-        // if(newPrice == undefined, newPrice==null)
         setPriceData((prev) => {
             let ar = prev.slice(0)
-
             ar[idx] = { x: idx, value: newPrice }
             setCurrIdx(x => x + 1)
-            // ar.push({value:newPrice,x:50})
-            // let index = Math.floor(getTimeSince() / 300)
             return ar
         })
     }
@@ -36,15 +32,13 @@ const MiniGraph = ({ value, lastPrice, priceHistory, marketClosed }) => {
     useEffect(() => {
         let interval = null
         if (marketClosed) {
-
             interval = setInterval(() => setPriceData((prev) => {
                 let ar = prev.slice(0)
-                ar[0]={x:0,value}
+                ar[0] = { x: 0, value }
                 setCurrIdx(x => {
                     ar.push({ x, value })
                     return x + 1
                 })
-
                 return ar
             }), 1000)
         }
@@ -55,14 +49,12 @@ const MiniGraph = ({ value, lastPrice, priceHistory, marketClosed }) => {
     }, [marketClosed])
 
     useEffect(() => {
-
-        // setCurrIdx(priceHistory.length)
-        // console.log(priceHistory)
         if (priceHistory.length == 0) {
             setPriceData([{ x: 0, value: value }])
             setCurrIdx(0)
         }
         else {
+            console.log(priceHistory)
             setPriceData(priceHistory.map((price, i) => ({ ...price, x: i })))
             setCurrIdx(priceHistory.length)
         }
@@ -73,7 +65,7 @@ const MiniGraph = ({ value, lastPrice, priceHistory, marketClosed }) => {
         <div className='w-full'>
 
             <ResponsiveContainer width="100%" height="100%" minWidth={100} aspect={2}  >
-                <ScatterChart
+                <ComposedChart
                     margin={{
                         top: 0,
                         right: 0,
@@ -82,19 +74,31 @@ const MiniGraph = ({ value, lastPrice, priceHistory, marketClosed }) => {
                     }}
                 >
                     <XAxis domain={[0, 44]} hide={true} type="number" dataKey="x" name="stature" unit="cm" />
-                    <YAxis domain={[lastPrice * .85, lastPrice * 1.05]} type="number" hide={true} dataKey="value" name="weight" unit="kg" />
-                    <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+                    <YAxis domain={[lastPrice * .85, lastPrice * 1.15]} type="number" hide={true} dataKey="value" name="weight" unit="kg" />
+                    <Bar dataKey="value" barSize={30} fill="red" />
+                    <Tooltip content={<CustomTooltip />} />
                     {/* <Legend /> */}
                     <ReferenceLine ifOverflow="extendDomain" y={lastPrice} stroke="#ddd" strokeDasharray="1 5" />
-                    <Scatter name="A school" data={priceData} fill={lastPrice > value ? "red" : "#07CA0C"} line shape={<></>} />
-                </ScatterChart>
-
-
+                    <Scatter isAnimationActive={true} name="A school" data={priceData} fill={lastPrice > value ? "red" : "#07CA0C"} line={{ strokeWidth: strokeW || 1 }} shape={<></>} />
+                </ComposedChart>
             </ResponsiveContainer>
         </div >
     )
 }
+const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="custom-tooltip p-2 bg-black text-lg">
+                <p>${Number(payload[0].value).toFixed(2)}</p>
+                {/* <p className="label">{`${label} : ${payload[0].value}`}</p> */}
+                {/* <p className="intro">{getIntroOfPage(label)}</p> */}
+                {/* <p className="desc">Anything you want can be displayed here.</p> */}
+            </div>
+        );
+    }
 
+    return null;
+};
 export default MiniGraph
 
 {/* <LineChart
