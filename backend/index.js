@@ -5,10 +5,16 @@ const PORT = 5000;
 const cors = require('cors'); // Require the cors package
 const app = express();
 app.use(cors());
+// Parse JSON bodies
+app.use(express.json());
+
+// Parse URL-encoded bodies
+app.use(express.urlencoded({ extended: true }));
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 const decoder = new TextDecoder('utf-8');
 const csuData = require('./csu')
+
 // Initial stock prices and last price
 let closingBalPrices = {
     'user': 0
@@ -35,9 +41,9 @@ let getStartingPrice = (data1) => {
     let obj = {}
     Object.keys(data1).map(ticker => {
         let csu = data1[ticker]
-        const basePrice = (csu.avgCost * csu.gradRate/100) / (csu.acceptanceRate + 0.5);
-        const adjustment = csu.bodyCount *.0001;
-    
+        const basePrice = (csu.avgCost * csu.gradRate / 100) / (csu.acceptanceRate + 0.5);
+        const adjustment = csu.bodyCount * .0001;
+
         // Final price, rounded to two decimal places
         const startingPrice = parseFloat((basePrice + adjustment).toFixed(2));
         obj[ticker] = startingPrice
@@ -46,15 +52,15 @@ let getStartingPrice = (data1) => {
     return (obj)
 
 }
-let genHistory = ()=>{
+let genHistory = () => {
     let obj = {}
-    Object.keys(stockPrices).map(ticker=>{
+    Object.keys(stockPrices).map(ticker => {
         obj[ticker] = []
     })
     return obj
 }
 let marketClosed = true
-let stockPrices =getStartingPrice(csuData.csuData)
+let stockPrices = getStartingPrice(csuData.csuData)
 let lastPrices = { ...stockPrices }
 
 let priceHistory = genHistory()
@@ -121,7 +127,6 @@ const openMarket = () => {
     setTimeout(closeMarket, 30000)
     marketClosed = false
 }
-
 const closeMarket = () => {
     console.log('Market Closed')
     prunePriceHistory()
@@ -191,6 +196,37 @@ app.get('/history', (req, res) => {
     const ticker = req.query.ticker;
     // Extract start and end dates from query parameters
     res.json(priceHistory[ticker]);
+});
+app.post("/order", (req, res) => {
+    const { type, tickerSymbol, stockPrice, qty } = req.body;
+    console.log(req.body)
+
+    // Validate request body
+    if (!type || !tickerSymbol || !stockPrice || !qty) {
+        console.log("ERROR WITH ORDER")
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Log the trade request (could be saved to a database or processed further)
+    console.log("Trade Request Received:", { type, tickerSymbol, stockPrice, qty });
+
+    // Simulate trade processing
+    let currOwned = ownedStocks['user'][tickerSymbol]
+    console.log(currOwned)
+    if (!currOwned) return res.status(400).json({ error: "Dont own that stock" });
+    if (type=="Sell"&&qty > currOwned.shareCt) return res.status(400).json({ error: "Quantity more than owned" })
+    ownedStocks['user'][tickerSymbol].shareCt = type == 'Buy' ? currOwned.shareCt + qty : currOwned.shareCt - qty
+    const totalCost = stockPrice * qty;
+    if (type == "Buy") {
+        let prevTotalCost = ownedStocks['user'][tickerSymbol].avgCost * ownedStocks['user'][tickerSymbol].shareCt
+        let newAvg = (prevTotalCost + qty * stockPrice) / (qty + ownedStocks['user'][tickerSymbol].shareCt)
+        ownedStocks['user'][tickerSymbol].avgCost = newAvg.toFixed(2)
+    }
+
+    const responseMessage = `Trade executed: ${type.toUpperCase()} ${qty} shares of ${tickerSymbol} at $${stockPrice.toFixed(2)} each. Total: $${totalCost.toFixed(2)}`;
+
+    // Respond to the client
+    res.status(200).json({ message: responseMessage });
 });
 // Start the server
 server.listen(PORT, () => {
