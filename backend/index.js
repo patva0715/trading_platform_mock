@@ -23,7 +23,7 @@ let balHistory = {
     'user': [{ value: 220 }, { value: 250 }, { value: 220 }, { value: 220 },]
 }
 let userBalances = {
-    'user': 0
+    'user': 1000
 }
 let ownedStocks = {
     user: {
@@ -39,7 +39,7 @@ let ownedStocks = {
             shareCt: 1,
             avgCost: 120
         },
-        'BAK':{
+        'BAK': {
             shareCt: 1,
             avgCost: 80
         }
@@ -221,16 +221,26 @@ app.post("/order", (req, res) => {
     // Simulate trade processing
     let currOwned = ownedStocks['user'][tickerSymbol]
     console.log(currOwned)
-    if (!currOwned) return res.status(400).json({ error: "Dont own that stock" });
-    if (type=="Sell"&&qty > currOwned.shareCt) return res.status(400).json({ error: "Quantity more than owned" })
-    ownedStocks['user'][tickerSymbol].shareCt = type == 'Buy' ? currOwned.shareCt + qty : currOwned.shareCt - qty
-    const totalCost = stockPrice * qty;
-    if (type == "Buy") {
-        let prevTotalCost = ownedStocks['user'][tickerSymbol].avgCost * ownedStocks['user'][tickerSymbol].shareCt
-        let newAvg = (prevTotalCost + qty * stockPrice) / (qty + ownedStocks['user'][tickerSymbol].shareCt)
-        ownedStocks['user'][tickerSymbol].avgCost = newAvg.toFixed(2)
-    }
 
+    if (type == 'Sell') {
+        if (!currOwned) return res.status(400).json({ error: "Dont own that stock" });
+        if (qty > currOwned.shareCt) return res.status(400).json({ error: "Quantity more than owned" })
+            let newQty = currOwned.shareCt - qty
+            console.log(newQty)
+            if (!newQty) delete ownedStocks['user'][tickerSymbol];
+            else ownedStocks['user'][tickerSymbol].shareCt = newQty
+    }
+    else {
+        if (!currOwned) {
+            ownedStocks['user'][tickerSymbol] = { shareCt: qty, avgCost: stockPrice }
+        } else {
+            ownedStocks['user'][tickerSymbol].shareCt = currOwned.shareCt + qty
+            let prevTotalCost = ownedStocks['user'][tickerSymbol].avgCost * ownedStocks['user'][tickerSymbol].shareCt
+            let newAvg = (prevTotalCost + qty * stockPrice) / (qty + ownedStocks['user'][tickerSymbol].shareCt)
+            ownedStocks['user'][tickerSymbol].avgCost = newAvg.toFixed(2)
+        }
+    }
+    const totalCost = stockPrice * qty;
     const responseMessage = `Trade executed: ${type.toUpperCase()} ${qty} shares of ${tickerSymbol} at $${stockPrice.toFixed(2)} each. Total: $${totalCost.toFixed(2)}`;
 
     // Respond to the client

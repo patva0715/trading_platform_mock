@@ -16,7 +16,8 @@ const page = ({ params }) => {
     const [priceHistory, setPriceHistory] = useState([])
     const [stockPrice, setStockPrice] = useState(0)
     const [lastPrice, setLastPrice] = useState(0)
-    let bgColor = stockPrice >= lastPrice ? 'Green' : "red"
+    const [isActive, setIsActive] = useState(false);
+    let bgColor = stockPrice >= lastPrice ? '#07CA0C' : "#FF0000"
     const handleSubmit = async (e) => {
         e.preventDefault();
         const requestBody = {
@@ -156,7 +157,7 @@ const page = ({ params }) => {
                         </div>
 
 
-                        {owned.shareCt ? <StockInfoWindow stockPrice={stockPrice} owned={owned} /> : <></>}
+                        {owned&&owned.shareCt ? <StockInfoWindow stockPrice={stockPrice} owned={owned} /> : <></>}
 
                         <div className='flex py-4 pt-12 border-y-[1px] border-neutral-700'>
                             <span className='text-xl font-bold grow'>About</span>
@@ -181,19 +182,23 @@ const page = ({ params }) => {
                     <form className='flex flex-col gap-2 p-6 pt-3 text-sm grow' onSubmit={handleSubmit}>
                         <div className='flex items-center'>
                             <span className='grow w-1/2'>Order Type</span>
-                            <select className='bg-transparent border-[1px] rounded-md border-neutral-500 p-1' value={transactionType} onChange={(e) => setTransactionType(e.target.value)}>
+                            <select className='bg-transparent border-[1px] w-1/3 rounded-md border-neutral-500 p-1' value={transactionType} onChange={(e) => setTransactionType(e.target.value)}>
                                 <option className='bg-black rounded-none' value='Sell'>Sell</option>
                                 <option className='bg-black rounded-none' value='Buy'>Buy</option>
                             </select></div>
                         <div className='flex items-center'>
-                            <span className='grow w-1/2'>Shares</span><input placeholder="0" className='w-1/2 bg-transparent border-[1px] p-1 text-right rounded-md border-neutral-500' value={qty} onChange={(e) => handleQtyChange(e.target.value)} />
+                            <span className='grow w-1/2'>Shares</span>
+                            <input placeholder="0" className='w-1/3 bg-transparent border-[1px] p-1 text-right rounded-md outline-none' style={{
+                                borderColor: isActive ? bgColor : "#666", // Use the dynamic variable here
+                            }} onFocus={() => { console.log("HELLO"); setIsActive(true) }}
+                                onBlur={() => { console.log("Axxxx"); setIsActive(false) }} value={qty} onChange={(e) => handleQtyChange(e.target.value)} />
                         </div>
                         <div className='flex items-center'><span className='basis-1/2 grow '>Market Price</span><span className='font-bold text-right p-1'>${stockPrice}</span></div>
                         <div className='h-[1px] w-full bg-neutral-500 my-2' />
                         <div className='flex'><span className='basis-1/2 grow '>Estimated Total</span><span className='font-bold text-right'>${Number((stockPrice * (qty || 0)).toFixed(2)).toLocaleString()}</span></div>
                         <button type='submit' className='p-4 rounded-full bg-red-500 text-[rgb(30,33,36)] font-semibold mt-6' style={{ backgroundColor: bgColor }}>Place {transactionType} Order</button>
                         <div className='w-full text-center'>
-                            {owned.shareCt ? <span className='p-2' style={{ color: bgColor }}>{owned.shareCt} available</span> : ""}
+                            {owned&&owned.shareCt ? <span className='p-2' style={{ color: bgColor }}>{owned.shareCt} available</span> : ""}
                         </div>
                     </form>
                     <h2 className="pt-4 pb-3 border-t-[1px] border-neutral-500 text-center text-xs">$1,234 buying power available</h2>
