@@ -107,36 +107,36 @@ const csuData = {
       avgCost: 26000,
       acceptanceRate: 0.93
     },
-    SJS: {
-      bodyCount: 36100,
-      gradRate: 0.66,
-      avgCost: 28000,
-      acceptanceRate: 0.67
-    },
-    SLO: {
-      bodyCount: 22000,
-      gradRate: 0.84,
-      avgCost: 28500,
-      acceptanceRate: 0.30
-    },
-    SMR: {
-      bodyCount: 16000,
-      gradRate: 0.58,
-      avgCost: 23500,
-      acceptanceRate: 0.80
-    },
-    SON: {
-      bodyCount: 6500,
-      gradRate: 0.61,
-      avgCost: 25000,
-      acceptanceRate: 0.94
-    },
-    STA: {
-      bodyCount: 10200,
-      gradRate: 0.58,
-      avgCost: 21500,
-      acceptanceRate: 0.89
-    }
+    // SJS: {
+    //   bodyCount: 36100,
+    //   gradRate: 0.66,
+    //   avgCost: 28000,
+    //   acceptanceRate: 0.67
+    // },
+    // SLO: {
+    //   bodyCount: 22000,
+    //   gradRate: 0.84,
+    //   avgCost: 28500,
+    //   acceptanceRate: 0.30
+    // },
+    // SMR: {
+    //   bodyCount: 16000,
+    //   gradRate: 0.58,
+    //   avgCost: 23500,
+    //   acceptanceRate: 0.80
+    // },
+    // SON: {
+    //   bodyCount: 6500,
+    //   gradRate: 0.61,
+    //   avgCost: 25000,
+    //   acceptanceRate: 0.94
+    // },
+    // STA: {
+    //   bodyCount: 10200,
+    //   gradRate: 0.58,
+    //   avgCost: 21500,
+    //   acceptanceRate: 0.89
+    // }
   };
 
   module.exports = {

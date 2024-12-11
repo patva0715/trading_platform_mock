@@ -28,12 +28,20 @@ let userBalances = {
 let ownedStocks = {
     user: {
         'FUL': {
-            shareCt: 1,
+            shareCt: 2,
             avgCost: 100
         },
         'POM': {
             shareCt: 1,
             avgCost: 120
+        },
+        'POM': {
+            shareCt: 1,
+            avgCost: 120
+        },
+        'BAK':{
+            shareCt: 1,
+            avgCost: 80
         }
     }
 }
