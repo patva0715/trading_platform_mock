@@ -109,9 +109,9 @@ export default function Home() {
         console.log('Closing Balance Price Updataed')
         setClosingBalance(data.data.closingBalPrices['user'])
       }
-
       else {
-        console.log(data)
+    
+        console.log("RECEIVED UNCATCHED MESSAGE - WEBSOCKET")
       }
     };
 
@@ -288,7 +288,7 @@ const ItemWatchList = ({ stock, priceHistory, marketClosed }) => {
       <span className="font-bold grow basis-1/4 shrink-0 ">{stock.ticker}</span>
       {/* {stock.changePer>0?  <div className="basis-28 bg-green-400 h-[2px]"></div>:  <div className="basis-28 bg-red-400 h-[2px]"></div>} */}
       <div className="shrink-0 grow-0 basis-1/5 flex justify-center">
-        <MiniGraph value={stock.price} lastPrice={stock.lastPrice} priceHistory={priceHistory} marketClosed={marketClosed} />
+        <MiniGraph value={stock.price} range={1} lastPrice={stock.lastPrice} priceHistory={priceHistory} marketClosed={marketClosed} />
       </div>
       <div className="grow shrink-0 basis-1/4 flex items-end flex-col gap-1 font-light ">
         <p className="grow text-sm">${stock.price}</p>

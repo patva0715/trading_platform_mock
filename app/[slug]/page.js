@@ -14,9 +14,11 @@ const page = ({ params }) => {
     const [owned, setOwned] = useState({})
     const [marketClosed, setMarketClosed] = useState(false)
     const [priceHistory, setPriceHistory] = useState([])
+    const [historicalPrices, setHistoricalPrices] = useState([])
     const [stockPrice, setStockPrice] = useState(0)
     const [lastPrice, setLastPrice] = useState(0)
     const [isActive, setIsActive] = useState(false);
+    const [range, setRange] = useState(1)
     let bgColor = stockPrice >= lastPrice ? '#07CA0C' : "#FF0000"
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -80,6 +82,21 @@ const page = ({ params }) => {
             console.error('Error fetching owned stocks:', error);
         }
     }
+    const fetchHistoricalPrices = async (theRange) => {
+        try {
+            const response = await fetch(`http://localhost:5000/historicalPrices?ticker=${ticker}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch owned stocks');
+            }
+            const data = await response.json();
+            console.log("ALL HISTORY")
+            console.log(data.slice(theRange*-30))
+            setHistoricalPrices(data.slice(theRange*-30))
+            // setPriceHistory(data[ticker]); // Set the received data to the state
+        } catch (error) {
+            console.error('Error fetching owned stocks:', error);
+        }
+    }
     const fetchOwned = async () => {
         try {
             const response = await fetch('http://localhost:5000/ownedStocks');
@@ -98,6 +115,7 @@ const page = ({ params }) => {
         fetchOwned()
         fetchLastPrices()
         fetchPriceHistories()
+        // fetchHistoricalPrices()
         let interval = null
         // Establish a WebSocket connection to the server
         const ws = new WebSocket('ws://localhost:5000');
@@ -134,7 +152,9 @@ const page = ({ params }) => {
             ws.close();
         };
     }, [ticker]);
-
+    useEffect(()=>{
+        fetchHistoricalPrices(range)
+    },[range])
     return (
         <>
             <NavBar />
@@ -150,10 +170,10 @@ const page = ({ params }) => {
 
                         <span>{marketClosed ? 'Market Closed' : 'Today'}</span>
                     </p>
-                    <MiniGraph strokeW={3} value={stockPrice} lastPrice={lastPrice} priceHistory={priceHistory} marketClosed={marketClosed} />
+                    <MiniGraph strokeW={3} value={stockPrice} lastPrice={lastPrice} priceHistory={priceHistory} historicalPrices={historicalPrices} marketClosed={marketClosed} range={range} />
                     <div className='py-4 px-1 flex gap-2 flex-col'>
                         <div className='flex basis-full gap-2 py-4'>
-                            {["1D", "1W", "1M", "YTD", "1Y"].map((range) => (<button key={range} className='font-bold text-white text-sm p-1 hover:bg-green-500 aspect-[3] basis-10 w-auto'>{range}</button>))}
+                            {[1,7,30,100].map((x) => (<button key={x} className='text-nowrap font-bold text-white text-sm p-1 hover:bg-green-500 aspect-[3] basis-10 w-auto' onClick={()=>setRange(x)}>{x} D</button>))}
                         </div>
 
 
@@ -249,7 +269,6 @@ const OrderHistoryWindow = ({ ticker, owned }) => {
             }
 
             const data = await response.json();
-            console.log(data.history)
             setOrderHistory(data.history); // Set the received data to the state
         } catch (error) {
             console.error('Error fetching owned stocks:', error);

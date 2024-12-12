@@ -2,7 +2,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, ScatterChart, Scatter, ComposedChart, Bar } from 'recharts';
 
-const MiniGraph = ({ value, lastPrice, priceHistory, marketClosed, strokeW }) => {
+const MiniGraph = ({ value, lastPrice, priceHistory, marketClosed, strokeW, range, historicalPrices }) => {
+    let historicalPricesFormatted = historicalPrices?historicalPrices.map((price, i) => ({ ...price, x: i })):[]
     // if (!priceHistory) return <></>
     // const [priceData, setPriceData] = useState([...priceHistory, ...Array.from({ length: 50 }, (_, index) => ({ value: null}))] )
     const [priceData, setPriceData] = useState([])
@@ -54,13 +55,13 @@ const MiniGraph = ({ value, lastPrice, priceHistory, marketClosed, strokeW }) =>
             setCurrIdx(0)
         }
         else {
+            let ar = priceHistory.slice(30)
             console.log(priceHistory)
             setPriceData(priceHistory.map((price, i) => ({ ...price, x: i })))
             setCurrIdx(priceHistory.length)
         }
     }, [priceHistory])
-
-
+    console.log(historicalPrices)
     return (
         <div className='w-full'>
 
@@ -73,13 +74,25 @@ const MiniGraph = ({ value, lastPrice, priceHistory, marketClosed, strokeW }) =>
                         left: 0,
                     }}
                 >
-                    <XAxis domain={[0, 44]} hide={true} type="number" dataKey="x" name="stature" unit="cm" />
-                    <YAxis domain={[lastPrice * .85, lastPrice * 1.15]} type="number" hide={true} dataKey="value" name="weight" unit="kg" />
-                    <Bar dataKey="value" barSize={30} fill="red" />
-                    <Tooltip content={<CustomTooltip strokeW={strokeW} />} />
-                    {/* <Legend /> */}
-                    <ReferenceLine ifOverflow="extendDomain" y={lastPrice} stroke="#ddd" strokeDasharray="1 5" />
-                    <Scatter isAnimationActive={true} name="A school" data={priceData} fill={lastPrice > value ? "red" : "#07CA0C"} line={{ strokeWidth: strokeW || 1 }} shape={<></>} />
+                    {range == 1 ? <>
+                        <XAxis domain={[0, 44]} hide={true} type="number" dataKey="x" name="stature" unit="cm" />
+                        <YAxis domain={[lastPrice * .85, lastPrice * 1.15]} type="number" hide={true} dataKey="value" name="weight" unit="kg" />
+                        <Bar dataKey="value" barSize={30} fill="red" />
+                        <Tooltip content={<CustomTooltip strokeW={strokeW} />} />
+                        {/* <Legend /> */}
+                        <ReferenceLine ifOverflow="extendDomain" y={lastPrice} stroke="#ddd" strokeDasharray="1 5" />
+                        <Scatter isAnimationActive={true} name="A school" data={priceData} fill={lastPrice > value ? "red" : "#07CA0C"} line={{ strokeWidth: strokeW || 1 }} shape={<></>} />
+                    </> : <>
+                        <XAxis domain={[0,range*30]}  hide={false} type="number" dataKey="x" name="stature" unit="D" />
+                        <YAxis 
+                        domain={[Math.min(...historicalPricesFormatted.map(obj => obj.value))*.8,Math.max(...historicalPricesFormatted.map(obj => obj.value))*1.2]} 
+                        type="number" hide={false} dataKey="value" name="weight" unit="$" />
+                        <Bar dataKey="value" barSize={500} fill="red" />
+                        <Tooltip content={<CustomTooltip strokeW={strokeW} />} />
+                        {/* <Legend /> */}
+                        <Scatter isAnimationActive={true} name="A school" data={historicalPricesFormatted} fill={"#07CA0C"} line={{ strokeWidth: strokeW || 1 }} shape={<></>} />
+                    </>}
+
                 </ComposedChart>
             </ResponsiveContainer>
         </div >

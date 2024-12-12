@@ -21,10 +21,10 @@ const csuData = require('./csu')
 let closingBalPrices = {
     'user': 0
 };
-let balHistory = {
-    'user': [{ value: 220 }, { value: 250 }, { value: 220 }, { value: 220 },]
-}
-let userBalances = {
+// let porfolioHistory = {
+//     'user': [{ value: 220 }, { value: 250 }, { value: 220 }, { value: 220 },]
+// }
+let userCash = {
     'user': 1000
 }
 let orderHistory = {
@@ -77,6 +77,7 @@ let genHistory = () => {
     Object.keys(stockPrices).map(ticker => {
         obj[ticker] = []
     })
+    obj['user']=[]
     return obj
 }
 let marketClosed = true
@@ -84,6 +85,7 @@ let stockPrices = getStartingPrice(csuData.csuData)
 let lastPrices = { ...stockPrices }
 
 let priceHistory = genHistory()
+let historicalPrices = genHistory()
 
 
 
@@ -101,6 +103,7 @@ const updateStockPrices = () => {
         let newVal = stockPrices[ticker] * (1 + change)
         stockPrices[ticker] = (newVal).toFixed(2);
         priceHistory[ticker].push(({ value: Number(newVal) }))
+        historicalPrices[ticker].push(({ value: Number(newVal) }))
 
     });
 };
@@ -135,10 +138,7 @@ const updateClosingBalances = () => {
 const prunePriceHistory = () => {
     if (marketClosed) return
     Object.keys(priceHistory).forEach(ticker => {
-        if(priceHistory[ticker].length>OPENFOR*1){
-            console.log(`Pruning ${ticker}`)
             priceHistory[ticker] = []
-        }
         
     })
     // Object.keys(balHistory).forEach(user => {
@@ -153,7 +153,7 @@ const openMarket = () => {
 }
 const closeMarket = () => {
     console.log('XXX Market Closed XXX')
-    // prunePriceHistory()
+    prunePriceHistory()
     marketClosed = true
     updateLastPrices()
     updateClosingBalances()
@@ -217,6 +217,11 @@ app.get('/priceHistories', (req, res) => {
     // Extract start and end dates from query parameters
     res.json(priceHistory);
 });
+app.get('/historicalPrices', (req, res) => {
+    // Extract start and end dates from query parameters
+    const ticker = req.query.ticker;
+    res.json(historicalPrices[ticker]);
+});
 app.get('/history', (req, res) => {
     const ticker = req.query.ticker;
     // Extract start and end dates from query parameters
@@ -257,6 +262,7 @@ app.post("/order", (req, res) => {
         }
     }
     const totalCost = stockPrice * qty;
+    if(!orderHistory['user'][tickerSymbol])orderHistory['user'][tickerSymbol]=[]
     orderHistory['user'][tickerSymbol].push({date:'Jan 1',qty, type, totalCost})
     console.log(orderHistory['user'])
     const responseMessage = `Trade executed: ${type.toUpperCase()} ${qty} shares of ${tickerSymbol} at $${stockPrice.toFixed(2)} each. Total: $${totalCost.toFixed(2)}`;
