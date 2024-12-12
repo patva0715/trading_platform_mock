@@ -157,7 +157,7 @@ const page = ({ params }) => {
                         </div>
 
 
-                        {owned&&owned.shareCt ? <StockInfoWindow stockPrice={stockPrice} owned={owned} /> : <></>}
+                        {owned && owned.shareCt ? <StockInfoWindow stockPrice={stockPrice} owned={owned} /> : <></>}
 
                         <div className='flex py-4 pt-12 border-y-[1px] border-neutral-700'>
                             <span className='text-xl font-bold grow'>About</span>
@@ -169,15 +169,14 @@ const page = ({ params }) => {
                         </div>
                         <KeyStatWindow stockPrice={stockPrice} />
 
-                        <div className='flex py-4 pt-12 border-y-[1px] border-neutral-700'>
-                            <span className='text-xl font-bold grow'>History</span>
-                        </div>
+
+                        <OrderHistoryWindow ticker={ticker} owned={owned} />
 
 
                     </div>
                 </div>
                 {/* DIVIDER COL 2 - PLACE ORDER WINDOW */}
-                <div className="w-1/4 border-[1px] min-h-[600px] border-neutral-500 bg-[rgb(30,33,36)] text-white rounded-md flex flex-col">
+                <div className="w-1/4 border-[1px] min-h-[600px] border-neutral-500 bg-[rgb(30,33,36)] text-white rounded-md flex flex-col sticky top-10">
                     <h2 className="p-6 pb-3 border-b-[1px] border-neutral-500 font-bold">{transactionType} {ticker}</h2>
                     <form className='flex flex-col gap-2 p-6 pt-3 text-sm grow' onSubmit={handleSubmit}>
                         <div className='flex items-center'>
@@ -198,7 +197,7 @@ const page = ({ params }) => {
                         <div className='flex'><span className='basis-1/2 grow '>Estimated Total</span><span className='font-bold text-right'>${Number((stockPrice * (qty || 0)).toFixed(2)).toLocaleString()}</span></div>
                         <button type='submit' className='p-4 rounded-full bg-red-500 text-[rgb(30,33,36)] font-semibold mt-6' style={{ backgroundColor: bgColor }}>Place {transactionType} Order</button>
                         <div className='w-full text-center'>
-                            {owned&&owned.shareCt ? <span className='p-2' style={{ color: bgColor }}>{owned.shareCt} available</span> : ""}
+                            {owned && owned.shareCt ? <span className='p-2' style={{ color: bgColor }}>{owned.shareCt} available</span> : ""}
                         </div>
                     </form>
                     <h2 className="pt-4 pb-3 border-t-[1px] border-neutral-500 text-center text-xs">$1,234 buying power available</h2>
@@ -235,6 +234,46 @@ const KeyStatWindow = () => {
             <div className='grow basis-1/4 pb-4'><p className='font-semibold '>Open price</p><p>$320.16(12.25%)</p></div>
             <div className='grow basis-1/4 pb-4'><p className='font-semibold '>52 Week high</p><p>$302.12</p></div>
             <div className='grow basis-1/4 pb-4'><p className='font-semibold '>52 Week low</p><p>$230.12</p></div>
+        </div>
+    )
+}
+
+const OrderHistoryWindow = ({ ticker, owned }) => {
+    const [orderHistory, setOrderHistory] = useState([])
+    const fetchOrderHistory = async () => {
+        try {
+            const response = await fetch(`http://localhost:5000/order?tickerSymbol=${ticker}`);
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch order history');
+            }
+
+            const data = await response.json();
+            console.log(data.history)
+            setOrderHistory(data.history); // Set the received data to the state
+        } catch (error) {
+            console.error('Error fetching owned stocks:', error);
+        }
+    }
+    useEffect(() => {
+        fetchOrderHistory()
+    }, [ticker,owned])
+
+    if (!orderHistory) return
+    return (
+        <div className='py-4 pt-12 border-t-[1px] border-neutral-700'>
+            <p className='text-xl font-bold grow pb-3'>History</p>
+            <div >
+                {orderHistory.slice().reverse().map(({ type, qty, date, totalCost }, idx) => (
+                    <div key={idx} className='flex border-y-[1px] border-neutral-700 p-3 hover:bg-neutral-600 '>
+                        <div>
+                            <p className='font-semibold leading-4 text-sm'>{`${type} ${qty} ${ticker}`}</p>
+                            <span className=' text-xs font-light'>{date}</span>
+                        </div>
+                        <span className='grow text-right font-bold text-sm'>{dollerFormat.format(totalCost)}</span>
+                    </div>
+                ))}
+            </div>
         </div>
     )
 }

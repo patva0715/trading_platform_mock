@@ -7,6 +7,8 @@ const app = express();
 app.use(cors());
 // Parse JSON bodies
 app.use(express.json());
+const OPENFOR = 30
+const CLOSEFOR = 15
 
 // Parse URL-encoded bodies
 app.use(express.urlencoded({ extended: true }));
@@ -133,28 +135,33 @@ const updateClosingBalances = () => {
 const prunePriceHistory = () => {
     if (marketClosed) return
     Object.keys(priceHistory).forEach(ticker => {
-        priceHistory[ticker] = []
+        if(priceHistory[ticker].length>OPENFOR*1){
+            console.log(`Pruning ${ticker}`)
+            priceHistory[ticker] = []
+        }
+        
     })
-    Object.keys(balHistory).forEach(user => {
-        balHistory[user] = []
-    })
+    // Object.keys(balHistory).forEach(user => {
+    //     balHistory[user] = []
+    // })
 
 };
 const openMarket = () => {
-    console.log('===Market Open===')
-    setTimeout(closeMarket, 30000)
+    console.log('=== Market Open ===')
+    setTimeout(closeMarket, OPENFOR*1000)
     marketClosed = false
 }
 const closeMarket = () => {
-    console.log('Market Closed')
-    prunePriceHistory()
+    console.log('XXX Market Closed XXX')
+    // prunePriceHistory()
     marketClosed = true
     updateLastPrices()
     updateClosingBalances()
-    setTimeout(openMarket, 15000)
+    setTimeout(openMarket, CLOSEFOR*1000)
 }
 // Update stock prices every second
 setInterval(() => {
+    console.log(priceHistory['FUL'].length)
     updateStockPrices();
 }, 1000);
 
@@ -258,8 +265,8 @@ app.post("/order", (req, res) => {
     res.status(200).json({ message: responseMessage });
 });
 app.get("/order", (req, res) => {
-    const {  tickerSymbol } = req.body;
-    console.log(req.body)
+    const   tickerSymbol  = req.query.tickerSymbol;
+    console.log(tickerSymbol)
 
     // Validate request body
     if (!tickerSymbol ) {
