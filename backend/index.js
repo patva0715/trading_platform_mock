@@ -25,6 +25,16 @@ let balHistory = {
 let userBalances = {
     'user': 1000
 }
+let orderHistory = {
+    'user':{
+        'FUL':[{
+            date: 'May 25',
+            qty: 2,
+            type: 'Sell',
+            totalCost: 120
+        }]
+    }
+}
 let ownedStocks = {
     user: {
         'FUL': {
@@ -226,7 +236,6 @@ app.post("/order", (req, res) => {
         if (!currOwned) return res.status(400).json({ error: "Dont own that stock" });
         if (qty > currOwned.shareCt) return res.status(400).json({ error: "Quantity more than owned" })
             let newQty = currOwned.shareCt - qty
-            console.log(newQty)
             if (!newQty) delete ownedStocks['user'][tickerSymbol];
             else ownedStocks['user'][tickerSymbol].shareCt = newQty
     }
@@ -241,10 +250,28 @@ app.post("/order", (req, res) => {
         }
     }
     const totalCost = stockPrice * qty;
+    orderHistory['user'][tickerSymbol].push({date:'Jan 1',qty, type, totalCost})
+    console.log(orderHistory['user'])
     const responseMessage = `Trade executed: ${type.toUpperCase()} ${qty} shares of ${tickerSymbol} at $${stockPrice.toFixed(2)} each. Total: $${totalCost.toFixed(2)}`;
 
     // Respond to the client
     res.status(200).json({ message: responseMessage });
+});
+app.get("/order", (req, res) => {
+    const {  tickerSymbol } = req.body;
+    console.log(req.body)
+
+    // Validate request body
+    if (!tickerSymbol ) {
+        console.log("ERROR WITH ORDER")
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Simulate trade processing
+    let history = orderHistory['user'][tickerSymbol]
+    console.log(history)
+    const responseMessage = `Fetch History for ${tickerSymbol}`;
+    res.status(200).json({ message: responseMessage, history });
 });
 // Start the server
 server.listen(PORT, () => {
