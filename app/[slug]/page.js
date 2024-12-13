@@ -9,6 +9,7 @@ const dollerFormat = new Intl.NumberFormat('en-US', {
 });
 const page = ({ params }) => {
     const ticker = params.slug
+    const [processing, setProcessing] = useState(false)
     const [transactionType, setTransactionType] = useState("Buy")
     const [qty, setQty] = useState("")
     const [owned, setOwned] = useState({})
@@ -21,6 +22,7 @@ const page = ({ params }) => {
     const [range, setRange] = useState(1)
     let bgColor = stockPrice >= lastPrice ? '#07CA0C' : "#FF0000"
     const handleSubmit = async (e) => {
+        setProcessing(true)
         e.preventDefault();
         const requestBody = {
             type: transactionType,
@@ -45,6 +47,7 @@ const page = ({ params }) => {
             } else {
                 alert("Transaction failed. Please try again.");
             }
+            setTimeout(() => setProcessing(false), 800)
         } catch (error) {
             console.error("Error:", error);
             alert("An error occurred while processing the transaction.");
@@ -90,8 +93,8 @@ const page = ({ params }) => {
             }
             const data = await response.json();
             console.log("ALL HISTORY")
-            console.log(data.slice(theRange*-30))
-            setHistoricalPrices(data.slice(theRange*-30))
+            console.log(data.slice(theRange * -30))
+            setHistoricalPrices(data.slice(theRange * -30))
             // setPriceHistory(data[ticker]); // Set the received data to the state
         } catch (error) {
             console.error('Error fetching owned stocks:', error);
@@ -152,9 +155,9 @@ const page = ({ params }) => {
             ws.close();
         };
     }, [ticker]);
-    useEffect(()=>{
+    useEffect(() => {
         fetchHistoricalPrices(range)
-    },[range])
+    }, [range])
     return (
         <>
             <NavBar />
@@ -173,7 +176,7 @@ const page = ({ params }) => {
                     <MiniGraph strokeW={3} value={stockPrice} lastPrice={lastPrice} priceHistory={priceHistory} historicalPrices={historicalPrices} marketClosed={marketClosed} range={range} />
                     <div className='py-4 px-1 flex gap-2 flex-col'>
                         <div className='flex basis-full gap-2 py-4'>
-                            {[1,7,30,100].map((x) => (<button key={x} className='text-nowrap font-bold text-white text-sm p-1 hover:bg-green-500 aspect-[3] basis-10 w-auto' onClick={()=>setRange(x)}>{x} D</button>))}
+                            {[1, 7, 30, 100].map((x) => (<button key={x} className='text-nowrap font-bold text-white text-sm p-1 hover:bg-green-500 aspect-[3] basis-10 w-auto' onClick={() => setRange(x)}>{x} D</button>))}
                         </div>
 
 
@@ -215,7 +218,8 @@ const page = ({ params }) => {
                         <div className='flex items-center'><span className='basis-1/2 grow '>Market Price</span><span className='font-bold text-right p-1'>${stockPrice}</span></div>
                         <div className='h-[1px] w-full bg-neutral-500 my-2' />
                         <div className='flex'><span className='basis-1/2 grow '>Estimated Total</span><span className='font-bold text-right'>${Number((stockPrice * (qty || 0)).toFixed(2)).toLocaleString()}</span></div>
-                        <button type='submit' className='p-4 rounded-full bg-red-500 text-[rgb(30,33,36)] font-semibold mt-6' style={{ backgroundColor: bgColor }}>Place {transactionType} Order</button>
+                        {processing ? <p className='w-full p-4 text-center mt-6 font-bold' style={{ color: bgColor }}>...Processing</p> : <button type='submit' className='p-4 rounded-full bg-red-500 text-[rgb(30,33,36)] font-semibold mt-6' style={{ backgroundColor: bgColor }}>Place {transactionType} Order</button>}
+
                         <div className='w-full text-center'>
                             {owned && owned.shareCt ? <span className='p-2' style={{ color: bgColor }}>{owned.shareCt} available</span> : ""}
                         </div>
@@ -276,7 +280,7 @@ const OrderHistoryWindow = ({ ticker, owned }) => {
     }
     useEffect(() => {
         fetchOrderHistory()
-    }, [ticker,owned])
+    }, [ticker, owned])
 
     if (!orderHistory) return
     return (

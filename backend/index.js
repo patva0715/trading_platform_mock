@@ -28,8 +28,8 @@ let userCash = {
     'user': 1000
 }
 let orderHistory = {
-    'user':{
-        'FUL':[{
+    'user': {
+        'FUL': [{
             date: 'May 25',
             qty: 2,
             type: 'Sell',
@@ -77,7 +77,7 @@ let genHistory = () => {
     Object.keys(stockPrices).map(ticker => {
         obj[ticker] = []
     })
-    obj['user']=[]
+    obj['user'] = []
     return obj
 }
 let marketClosed = true
@@ -91,11 +91,18 @@ let historicalPrices = genHistory()
 
 // Function to update stock prices by ±1%
 const updateStockPrices = () => {
+    let userPortVal = 0
     if (marketClosed) {
         Object.keys(stockPrices).forEach(ticker => {
             priceHistory[ticker].push({ value: Number(stockPrices[ticker]) })
             // console.log(priceHistory[ticker][-1])
         })
+        Object.keys(ownedStocks['user']).map((ticker) => {
+            userPortVal += (ownedStocks['user'][ticker].shareCt * stockPrices[ticker])
+        })
+        userPortVal += userCash['user']
+        priceHistory['user'].push(({ value: Number(userPortVal) }))
+        historicalPrices['user'].push(({ value: Number(userPortVal) }))
         return
     }
     Object.keys(stockPrices).forEach(ticker => {
@@ -105,7 +112,13 @@ const updateStockPrices = () => {
         priceHistory[ticker].push(({ value: Number(newVal) }))
         historicalPrices[ticker].push(({ value: Number(newVal) }))
 
-    });
+    })
+    Object.keys(ownedStocks['user']).map((ticker) => {
+        userPortVal += (ownedStocks['user'][ticker].shareCt * stockPrices[ticker])
+    })
+    userPortVal += userCash['user']
+    priceHistory['user'].push(({ value: Number(userPortVal) }))
+    historicalPrices['user'].push(({ value: Number(userPortVal) }))
 };
 const updateLastPrices = () => {
     Object.keys(lastPrices).map((ticker) => {
@@ -125,7 +138,7 @@ const updateClosingBalances = () => {
         Object.keys(ownedStocks[user]).map((ticker) => {
             bal += (ownedStocks[user][ticker].shareCt * stockPrices[ticker])
         })
-        closingBalPrices[user] = bal
+        closingBalPrices[user] = bal+userCash['user']
     })
     console.log('Updated user closing bal prices')
     console.log(closingBalPrices)
@@ -138,8 +151,8 @@ const updateClosingBalances = () => {
 const prunePriceHistory = () => {
     if (marketClosed) return
     Object.keys(priceHistory).forEach(ticker => {
-            priceHistory[ticker] = []
-        
+        priceHistory[ticker] = []
+
     })
     // Object.keys(balHistory).forEach(user => {
     //     balHistory[user] = []
@@ -148,7 +161,7 @@ const prunePriceHistory = () => {
 };
 const openMarket = () => {
     console.log('=== Market Open ===')
-    setTimeout(closeMarket, OPENFOR*1000)
+    setTimeout(closeMarket, OPENFOR * 1000)
     marketClosed = false
 }
 const closeMarket = () => {
@@ -157,7 +170,7 @@ const closeMarket = () => {
     marketClosed = true
     updateLastPrices()
     updateClosingBalances()
-    setTimeout(openMarket, CLOSEFOR*1000)
+    setTimeout(openMarket, CLOSEFOR * 1000)
 }
 // Update stock prices every second
 setInterval(() => {
@@ -213,6 +226,10 @@ app.get('/closingBalance', (req, res) => {
     // Extract start and end dates from query parameters
     res.json(closingBalPrices['user']);
 });
+app.get('/userCash', (req, res) => {
+    // Extract start and end dates from query parameters
+    res.json(userCash['user']);
+});
 app.get('/priceHistories', (req, res) => {
     // Extract start and end dates from query parameters
     res.json(priceHistory);
@@ -227,6 +244,18 @@ app.get('/history', (req, res) => {
     // Extract start and end dates from query parameters
     res.json(priceHistory[ticker]);
 });
+app.get('/biggestMovers', (req, res) => {
+    let ar = []
+    Object.keys(lastPrices).map(ticker => {
+        let last = lastPrices[ticker]
+        let cur = stockPrices[ticker]
+        let percChange = Math.abs(cur - last) / last
+        ar.push({ ticker, percChange })
+    })
+    const top5 = ar.sort((a, b) => b.percChange - a.percChange).slice(0, 5);
+    res.json(top5)
+
+})
 app.post("/order", (req, res) => {
     const { type, tickerSymbol, stockPrice, qty } = req.body;
     console.log(req.body)
@@ -247,9 +276,10 @@ app.post("/order", (req, res) => {
     if (type == 'Sell') {
         if (!currOwned) return res.status(400).json({ error: "Dont own that stock" });
         if (qty > currOwned.shareCt) return res.status(400).json({ error: "Quantity more than owned" })
-            let newQty = currOwned.shareCt - qty
-            if (!newQty) delete ownedStocks['user'][tickerSymbol];
-            else ownedStocks['user'][tickerSymbol].shareCt = newQty
+        let newQty = currOwned.shareCt - qty
+        if (!newQty) delete ownedStocks['user'][tickerSymbol];
+        else ownedStocks['user'][tickerSymbol].shareCt = newQty
+        userCash['user']=userCash['user']+(qty*stockPrice)
     }
     else {
         if (!currOwned) {
@@ -260,10 +290,12 @@ app.post("/order", (req, res) => {
             let newAvg = (prevTotalCost + qty * stockPrice) / (qty + ownedStocks['user'][tickerSymbol].shareCt)
             ownedStocks['user'][tickerSymbol].avgCost = newAvg.toFixed(2)
         }
+        userCash['user']=userCash['user']-(qty*stockPrice)
+
     }
     const totalCost = stockPrice * qty;
-    if(!orderHistory['user'][tickerSymbol])orderHistory['user'][tickerSymbol]=[]
-    orderHistory['user'][tickerSymbol].push({date:'Jan 1',qty, type, totalCost})
+    if (!orderHistory['user'][tickerSymbol]) orderHistory['user'][tickerSymbol] = []
+    orderHistory['user'][tickerSymbol].push({ date: 'Jan 1', qty, type, totalCost })
     console.log(orderHistory['user'])
     const responseMessage = `Trade executed: ${type.toUpperCase()} ${qty} shares of ${tickerSymbol} at $${stockPrice.toFixed(2)} each. Total: $${totalCost.toFixed(2)}`;
 
@@ -271,11 +303,11 @@ app.post("/order", (req, res) => {
     res.status(200).json({ message: responseMessage });
 });
 app.get("/order", (req, res) => {
-    const   tickerSymbol  = req.query.tickerSymbol;
+    const tickerSymbol = req.query.tickerSymbol;
     console.log(tickerSymbol)
 
     // Validate request body
-    if (!tickerSymbol ) {
+    if (!tickerSymbol) {
         console.log("ERROR WITH ORDER")
         return res.status(400).json({ error: "Missing required fields" });
     }

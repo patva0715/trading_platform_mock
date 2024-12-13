@@ -5,6 +5,10 @@ import MiniGraph from "../components/miniGraph";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import NavBar from "@/components/navbar";
+const dollerFormat = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+});
 // DIVIDER
 // On load connect to backend server. Instantiate a socket for each stock in the watchlist
 // Loop through each stock owned and fetch new data for each. .1s gap between each fetch
@@ -13,13 +17,58 @@ import NavBar from "@/components/navbar";
 
 export default function Home() {
   const [userBal, setUserBal] = useState(0)
+  const [userCash, setUserCash] = useState(0)
   const [marketClosed, setMarketClosed] = useState(false)
   const [ownedStocks, setOwnedStocks] = useState({})
+  const [range, setRange] = useState(1)
   const [stockPrices, setStockPrices] = useState({});
   const [lastPrices, setLastPrices] = useState({});
   const [priceHistories, setPriceHistories] = useState({})
   const [closingBalance, setClosingBalance] = useState(0)
+  const [historicalPrices, setHistoricalPrices] = useState([])
+  const [biggestMovers, setBiggestMovers] = useState([])
   // DIVIDER
+  const fetchUserCash = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/userCash`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch owned stocks');
+      }
+      const data = await response.json();
+      setUserCash(data)
+    } catch (error) {
+      console.error('Error fetching owned stocks:', error);
+    }
+  }
+  const fetchTop5 = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/biggestMovers`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch owned stocks');
+      }
+      const data = await response.json();
+      console.log("BIGGEST MOVERS")
+      setBiggestMovers(data)
+      // setPriceHistory(data[ticker]); // Set the received data to the state
+    } catch (error) {
+      console.error('Error fetching owned stocks:', error);
+    }
+  }
+  const fetchHistoricalPrices = async (theRange) => {
+    try {
+      const response = await fetch(`http://localhost:5000/historicalPrices?ticker=${'user'}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch owned stocks');
+      }
+      const data = await response.json();
+      console.log("ALL HISTORY")
+      console.log(data.slice(theRange * -30))
+      setHistoricalPrices(data.slice(theRange * -30))
+      // setPriceHistory(data[ticker]); // Set the received data to the state
+    } catch (error) {
+      console.error('Error fetching owned stocks:', error);
+    }
+  }
   const fetchOwnedStocks = async () => {
     try {
       const response = await fetch('http://localhost:5000/ownedStocks');
@@ -40,7 +89,6 @@ export default function Home() {
         throw new Error('Failed to fetch owned stocks');
       }
       const data = await response.json();
-      console.log(data)
       setClosingBalance(data); // Set the received data to the state
     } catch (error) {
       console.error('Error fetching owned stocks:', error);
@@ -65,6 +113,7 @@ export default function Home() {
         throw new Error('Failed to fetch owned stocks');
       }
       const data = await response.json();
+      console.log(data)
       setPriceHistories(data); // Set the received data to the state
     } catch (error) {
       console.error('Error fetching owned stocks:', error);
@@ -73,8 +122,14 @@ export default function Home() {
   useEffect(() => {
     fetchOwnedStocks()
     fetchLastPrices()
+    fetchHistoricalPrices(30)
     fetchPriceHistories()
     fetchClosingBalance()
+    fetchTop5()
+    fetchUserCash()
+    setInterval(()=>{
+      fetchTop5()
+    },3000)
   }, [])
 
   useEffect(() => {
@@ -110,7 +165,7 @@ export default function Home() {
         setClosingBalance(data.data.closingBalPrices['user'])
       }
       else {
-    
+
         console.log("RECEIVED UNCATCHED MESSAGE - WEBSOCKET")
       }
     };
@@ -132,35 +187,27 @@ export default function Home() {
         <main className="flex max-w-[1400px] mx-auto gap-10 w-full">
           <div className="w-3/4">
             <h1 className="text-4xl ">Investing</h1>
-            <h1 className="text-4xl ">${userBal.toFixed(2)}</h1>
+            <h1 className="text-4xl ">{dollerFormat.format(userBal + userCash)}</h1>
             <p className='text-xs mt-1 flex gap-1'>
-              {userBal ? closingBalance > userBal ?
-                <span className=" text-red-500">${(Math.abs(closingBalance - userBal)).toFixed(2)} ({(100 * (closingBalance - userBal) / closingBalance).toFixed(2)}%)</span> :
-                <span className=" text-green-500">${(Math.abs(closingBalance - userBal)).toFixed(2)} ({(100 * (closingBalance - userBal) / closingBalance).toFixed(2)}%)</span> : <></>}
+              {userBal ? closingBalance > userBal + userCash ?
+                <span className=" text-red-500">${(Math.abs(userBal + userCash - closingBalance)).toFixed(2)} ({(100 * (userBal + userCash - closingBalance) / closingBalance).toFixed(2)}%)</span> :
+                <span className=" text-green-500">${(Math.abs(userBal + userCash - closingBalance)).toFixed(2)} ({(100 * (userBal + userCash - closingBalance) / closingBalance).toFixed(2)}%)</span> : <></>}
 
               <span>{marketClosed ? 'Premarket' : 'Today'}</span>
             </p>
-            <GraphWindow value={userBal} prevClosingPrice={closingBalance} />
+            {/* <MiniGraph value={stock.price} range={1} lastPrice={stock.lastPrice} priceHistory={priceHistory} marketClosed={marketClosed} /> */}
+            <MiniGraph strokeW={3} value={userBal + userCash} lastPrice={closingBalance} priceHistory={priceHistories['user']} historicalPrices={historicalPrices} marketClosed={marketClosed} range={range} />
+            {/* <GraphWindow value={userBal} prevClosingPrice={closingBalance} /> */}
             <div className='py-4 px-1 flex gap-2 flex-col'>
               <div className='flex basis-full gap-2 py-4'>
-                {["1D", "1W", "1M", "YTD", "1Y"].map((range) => (<button key={range} className='font-bold text-white text-sm p-1 hover:bg-green-500 aspect-[3] basis-10 w-auto'>{range}</button>))}
+                {[1, 7, 30, 1000].map((i, index) => (<button key={index} className='font-bold text-white text-sm p-1 hover:bg-green-500 aspect-[3] basis-10 w-auto text-nowrap' onClick={() => setRange(i)}>{i} D</button>))}
               </div>
 
               <div className='flex py-4 border-y-[1px] border-neutral-700'>
                 <span className='text-base font-bold grow'>Buying power</span>
-                <span className='text-base font-bold'>$499.21</span>
+                <span className='text-base font-bold'>{dollerFormat.format(userCash)}</span>
               </div>
-
-              <h2 className="text-2xl font-semibold py-4">Biggest Movers</h2>
-              <div className='flex gap-4'>
-                {['SPY', 'AMD', 'NVDA', 'COIN'].map((stock) => (
-                  <div key={stock} className='basis-[110px] aspect-[4/5] flex items-left p-4 justify-between font-semibold flex-col border-[1px] border-white'>
-                    <p className="text-sm text-right grow">{stock}</p>
-                    <span className='text-xl font-semibold text-green-500'>$123.23</span>
-                    <span className='text-sm font-light text-green-500'>10.54%</span>
-                  </div>
-                ))}
-              </div>
+              <BiggestMoversWindow biggestMovers={biggestMovers} lastPrices={lastPrices} stockPrices={stockPrices} />
 
             </div>
           </div>
@@ -187,7 +234,7 @@ export default function Home() {
 // DIVIDER
 const PositionsWindow = ({ ownedStocks, stocks }) => {
   return (
-    <div className="p-4 flex flex-col gap-4 text-sm">
+    <div className="flex flex-col gap-4 text-sm">
       {Object.keys(ownedStocks).map((stock) => (<ItemPosition stock={{ ...ownedStocks[stock], ticker: stock, price: stocks[stock] }} key={stock} />)
       )}
 
@@ -204,84 +251,47 @@ const WatchListWindow = ({ stocks, lastPrices, marketClosed, priceHistories }) =
   )
 }
 
-const mockPostions = [
-  {
-    ticker: "SPY",
-    value: 163,
-    count: 17
-  },
-  {
-    ticker: "NVDA",
-    value: 329,
-    count: 3
-  },
-  {
-    ticker: "AMD",
-    value: 219,
-    count: 53
-  },
-]
+const BiggestMoversWindow = ({ biggestMovers, lastPrices, stockPrices }) => {
+  console.log(lastPrices)
+  console.log(stockPrices)
+  return <>
+    <h2 className="text-2xl font-semibold py-4">Biggest Movers</h2>
+    <div className='flex gap-4'>
+      {biggestMovers.map((stock) => <BigWindowItem key={stock.ticker} stock={stock} lastPrice={lastPrices[stock.ticker]} stockPrice={stockPrices[stock.ticker]} />)}
+    </div></>
+}
+const BigWindowItem = ({ stock, lastPrice, stockPrice }) => {
 
-const mockWatchList = [{
-  ticker: "SPY",
-  value: 568.21,
-  changePer: -.08,
-}, {
-  ticker: "AMD",
-  value: 152.23,
-  changePer: .08
-}, {
-  ticker: "TSLA",
-  value: 243.23,
-  changePer: .08
-}, {
-  ticker: "META",
-  value: 558.78,
-  changePer: -.28
-}, {
-  ticker: "COIN",
-  value: 170.22,
-  changePer: .08
-}, {
-  ticker: "GME",
-  value: 19.60,
-  changePer: .08
-},]
+  let percChange = 100 * (stockPrice - lastPrice) / lastPrice
+  if (percChange < 0) return (<>
+    <Link href={`/${stock.ticker}`} key={stock.ticker} className=' hover:bg-red-900 basis-[110px] aspect-[4/5] flex items-left p-4 justify-between font-semibold flex-col border-[1px] border-red-500'>
+      <p className="text-sm text-right grow">{stock.ticker}</p>
+      <span className='text-xl font-semibold text-red-500'>{dollerFormat.format(stockPrice)}</span>
+      <span className='text-sm font-light text-red-500'>{percChange.toFixed(2)}%</span>
+    </Link>
+  </>)
+  return (<>
+    <Link href={`/${stock.ticker}`}  key={stock.ticker} className=' hover:bg-green-900 basis-[110px] aspect-[4/5] flex items-left p-4 justify-between font-semibold flex-col border-[1px] border-green-500'>
+      <p className="text-sm text-right grow">{stock.ticker}</p>
+      <span className='text-xl font-semibold text-green-500'>{dollerFormat.format(stockPrice)}</span>
+      <span className='text-sm font-light text-green-500'>{percChange.toFixed(2)}%</span>
+    </Link>
+  </>)
+}
 
 const ItemPosition = ({ stock }) => {
   return (
-    <div className="flex">
+    <Link href={`/${stock.ticker}`} className="p-4 flex hover:bg-neutral-800">
       <div className="grow">
         <p className="font-bold">{stock.ticker}</p>
         <p className="text-xs">{stock.shareCt} Shares</p>
       </div>
       <span className="font-bold">${(stock.price * stock.shareCt).toFixed(2)}</span>
-    </div>
+    </Link>
   )
 }
 
 const ItemWatchList = ({ stock, priceHistory, marketClosed }) => {
-  // const [priceHistory, setPriceHistory] = useState([])
-  // const fetchHistory = () => {
-  //   fetch(`http://localhost:5000/history?ticker=${stock.ticker}`)
-  //     .then(response => {
-  //       if (!response.ok) {
-  //         throw new Error('Failed to fetch owned stocks');
-  //       }
-  //       return response.json();
-  //     })
-  //     .then(data => {
-  //       console.log('FETCHING NEW HISTORY')
-  //       // console.log(data)
-  //       setPriceHistory(data); // Handle the data (e.g., setOwnedStocks(data))
-  //     })
-  //     .catch(error => {
-  //       console.error('Error fetching owned stocks:', error);
-  //     });
-  // }
-  // useEffect(() => {
-  //   fetchHistory()
-  // }, [stock.ticker])
 
   return (
     <Link href={`/${stock.ticker}`} className="flex items-center hover:bg-neutral-700 px-4 py-2">

@@ -1,6 +1,6 @@
 import React from 'react'
 import '../../styles/login.css';
-const Login = () => {
+const Login = ({setUser}) => {
   return (
     <div className='flex min-h-svh text-sm'>
       <div className='basis-1/2 bg-black border-r-[1px] flex items-center border-neutral-700'>
@@ -14,10 +14,10 @@ const Login = () => {
             <span className=''>Email</span>
             <input className='mb-6 w-full mt-2  p-2 border-[1px] border-neutral-700 rounded-sm bg-transparent' />
             <span className=''>Password</span>
-            <input className='mb-4 w-full mt-2 p-2 border-[1px] border-neutral-700 rounded-sm bg-transparent' />
+            <input type='password' className='mb-4 w-full mt-2 p-2 border-[1px] border-neutral-700 rounded-sm bg-transparent' />
             <p className='underline font-medium mb-2'>Forgot your password?</p>
             <p className='underline font-medium'>Forgot your email address?</p>
-            <button className='bg-white p-3 mt-14  rounded-full text-black min-w-min w-1/4'>Log In</button>
+            <button className='bg-white p-3 mt-14  rounded-full text-black min-w-min w-1/4' onClick={()=>setUser({username:'admin'})}>Log In</button>
           </form>
 
           <div className='overflow-visible items-center my-14 justify-center bg-neutral-600 w-full h-[1px] flex max-w-[650px]'>

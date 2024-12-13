@@ -4,18 +4,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 
 const MiniGraph = ({ value, lastPrice, priceHistory, marketClosed, strokeW, range, historicalPrices }) => {
     let historicalPricesFormatted = historicalPrices?historicalPrices.map((price, i) => ({ ...price, x: i })):[]
-    // if (!priceHistory) return <></>
-    // const [priceData, setPriceData] = useState([...priceHistory, ...Array.from({ length: 50 }, (_, index) => ({ value: null}))] )
     const [priceData, setPriceData] = useState([])
     const [idx, setCurrIdx] = useState(0)
-    // if (priceHistory.length==0){
-    //     setPriceData([...Array.from({ length: 45 }, (_, index) => ({ value: null}))])
-    //     setCurrIdx(0)
-    // }
-
-    // if(idx<priceHistory.length){
-    //     setCurrIdx(priceHistory.length)
-    // }
     const UpdateGraph = (newPrice) => {
         setPriceData((prev) => {
             let ar = prev.slice(0)
@@ -50,18 +40,19 @@ const MiniGraph = ({ value, lastPrice, priceHistory, marketClosed, strokeW, rang
     }, [marketClosed])
 
     useEffect(() => {
+        if(!priceHistory)return
         if (priceHistory.length == 0) {
             setPriceData([{ x: 0, value: value }])
             setCurrIdx(0)
         }
         else {
             let ar = priceHistory.slice(30)
-            console.log(priceHistory)
+            // console.log(priceHistory)
             setPriceData(priceHistory.map((price, i) => ({ ...price, x: i })))
             setCurrIdx(priceHistory.length)
         }
     }, [priceHistory])
-    console.log(historicalPrices)
+    // console.log(historicalPrices)
     return (
         <div className='w-full'>
 
@@ -75,7 +66,7 @@ const MiniGraph = ({ value, lastPrice, priceHistory, marketClosed, strokeW, rang
                     }}
                 >
                     {range == 1 ? <>
-                        <XAxis domain={[0, 44]} hide={true} type="number" dataKey="x" name="stature" unit="cm" />
+                        <XAxis domain={[0, 44]} hide={true} type="number" dataKey="x" name="stature"  />
                         <YAxis domain={[lastPrice * .85, lastPrice * 1.15]} type="number" hide={true} dataKey="value" name="weight" unit="kg" />
                         <Bar dataKey="value" barSize={30} fill="red" />
                         <Tooltip content={<CustomTooltip strokeW={strokeW} />} />
@@ -83,10 +74,10 @@ const MiniGraph = ({ value, lastPrice, priceHistory, marketClosed, strokeW, rang
                         <ReferenceLine ifOverflow="extendDomain" y={lastPrice} stroke="#ddd" strokeDasharray="1 5" />
                         <Scatter isAnimationActive={true} name="A school" data={priceData} fill={lastPrice > value ? "red" : "#07CA0C"} line={{ strokeWidth: strokeW || 1 }} shape={<></>} />
                     </> : <>
-                        <XAxis domain={[0,range*30]}  hide={false} type="number" dataKey="x" name="stature" unit="D" />
+                        <XAxis domain={[0,range*30]}  hide={true} type="number" dataKey="x" name="stature" unit="D" />
                         <YAxis 
                         domain={[Math.min(...historicalPricesFormatted.map(obj => obj.value))*.8,Math.max(...historicalPricesFormatted.map(obj => obj.value))*1.2]} 
-                        type="number" hide={false} dataKey="value" name="weight" unit="$" />
+                        type="number" hide={true} dataKey="value"  />
                         <Bar dataKey="value" barSize={500} fill="red" />
                         <Tooltip content={<CustomTooltip strokeW={strokeW} />} />
                         {/* <Legend /> */}

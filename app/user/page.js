@@ -9,7 +9,7 @@ const Page = () => {
     if(user.username){
         router.push('/')
     }
-    else {return (<Login/>)}
+    else {return (<Login setUser={setUser}/>)}
 }
 
 export default Page
