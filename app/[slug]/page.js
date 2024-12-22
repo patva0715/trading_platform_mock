@@ -10,6 +10,7 @@ const dollerFormat = new Intl.NumberFormat('en-US', {
 const page = ({ params }) => {
     const ticker = params.slug
     const [processing, setProcessing] = useState(false)
+  const [userCash, setUserCash] = useState(0)
     const [transactionType, setTransactionType] = useState("Buy")
     const [qty, setQty] = useState("")
     const [owned, setOwned] = useState({})
@@ -48,6 +49,7 @@ const page = ({ params }) => {
                 alert("Transaction failed. Please try again.");
             }
             setTimeout(() => setProcessing(false), 800)
+            fetchUserCash()
         } catch (error) {
             console.error("Error:", error);
             alert("An error occurred while processing the transaction.");
@@ -113,11 +115,24 @@ const page = ({ params }) => {
             console.error('Error fetching owned stocks:', error);
         }
     };
+    const fetchUserCash = async () => {
+        try {
+          const response = await fetch(`http://localhost:5000/userCash`);
+          if (!response.ok) {
+            throw new Error('Failed to fetch owned stocks');
+          }
+          const data = await response.json();
+          setUserCash(data)
+        } catch (error) {
+          console.error('Error fetching owned stocks:', error);
+        }
+      }
     useEffect(() => {
         if (!ticker) return
         fetchOwned()
         fetchLastPrices()
         fetchPriceHistories()
+        fetchUserCash()
         // fetchHistoricalPrices()
         let interval = null
         // Establish a WebSocket connection to the server
@@ -224,7 +239,7 @@ const page = ({ params }) => {
                             {owned && owned.shareCt ? <span className='p-2' style={{ color: bgColor }}>{owned.shareCt} available</span> : ""}
                         </div>
                     </form>
-                    <h2 className="pt-4 pb-3 border-t-[1px] border-neutral-500 text-center text-xs">$1,234 buying power available</h2>
+                    <h2 className="pt-4 pb-3 border-t-[1px] border-neutral-500 text-center text-xs">{dollerFormat.format(userCash)} buying power available</h2>
                 </div>
 
             </main>
